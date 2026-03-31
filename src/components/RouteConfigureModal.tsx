@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Search, User, Key, Save, Loader2 } from 'lucide-react';
+import { X, User, Key, Save, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
 
@@ -30,8 +30,8 @@ const RouteConfigureModal: React.FC<RouteConfigureModalProps> = ({ isOpen, onClo
         setLoading(true);
         try {
             const [custResponse, detailsResponse] = await Promise.all([
-                api.get(`/route/custodians/${scheduleId}`),
-                api.get(`/route/details/${scheduleId}`)
+                api.post('/route/custodians', { id: scheduleId }),
+                api.post('/route/details', { id: scheduleId })
             ]);
 
             setCustodians(custResponse.data);

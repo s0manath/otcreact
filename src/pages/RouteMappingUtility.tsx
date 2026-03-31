@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Map, Search, CheckSquare, Square, ArrowRight, Monitor } from 'lucide-react';
-import { motion } from 'framer-motion';
 import api from '../services/api';
-import { adminMasterService } from '../services/adminMasterService';
 import masterService from '../services/masterService';
 
 const RouteMappingUtility: React.FC = () => {
@@ -22,7 +20,7 @@ const RouteMappingUtility: React.FC = () => {
         try {
             setLoading(true);
             const [atmRes, keyRes] = await Promise.all([
-                api.get('/master/atms'),
+                api.post('/master/atms-list'),
                 masterService.getRouteKeys()
             ]);
             setAtms(atmRes.data);
@@ -48,7 +46,10 @@ const RouteMappingUtility: React.FC = () => {
 
         try {
             setSaveLoading(true);
-            await adminMasterService.bulkUpdateRouteKeys(selectedAtmIds, selectedRouteKey);
+            await api.post('/AdminMaster/bulk-update-route-keys', { 
+                atmIds: selectedAtmIds, 
+                routeKey: selectedRouteKey 
+            });
             alert('Successfully updated route keys for selected ATMs');
             setSelectedAtmIds([]);
             setSelectedRouteKey('');

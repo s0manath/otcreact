@@ -2,11 +2,8 @@ import React, { useState, useEffect } from 'react';
 import {
     Calendar,
     Monitor,
-    User,
     MapPin,
-    Hash,
     Plus,
-    Search,
     Filter,
     ChevronDown,
     ChevronUp,
@@ -56,7 +53,7 @@ const RouteConfigure: React.FC = () => {
 
     const fetchFilterOptions = async () => {
         try {
-            const response = await api.get('/route/filters');
+            const response = await api.post('/route/filters');
             setFilterOptions(response.data);
         } catch (error) {
             console.error('Error fetching filter options:', error);
@@ -66,20 +63,19 @@ const RouteConfigure: React.FC = () => {
     const fetchRouteData = async () => {
         setLoading(true);
         try {
-            const response = await api.get('/route/list', {
-                params: {
-                    fromDate: filters.dateFrom,
-                    toDate: filters.dateTo,
-                    region: filters.region,
-                    district: filters.district,
-                    franchise: filters.franchise,
-                    zom: filters.zom,
-                    activityType: filters.activityType,
-                    status: filters.status,
-                    chkConfig: filters.chkConfig,
-                    searchField: filters.searchField,
-                    searchValue: filters.searchValue
-                }
+            const response = await api.post('/route/list', {
+                fromDate: filters.dateFrom,
+                toDate: filters.dateTo,
+                region: filters.region,
+                district: filters.district,
+                franchise: filters.franchise,
+                zom: filters.zom,
+                activityType: filters.activityType,
+                status: filters.status,
+                chkConfig: filters.chkConfig,
+                searchField: filters.searchField,
+                searchValue: filters.searchValue,
+                username: 'admin'
             });
             setRouteData(response.data);
         } catch (error) {

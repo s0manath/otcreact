@@ -50,7 +50,7 @@ export interface PendingLoginRequest {
 export const adminMasterService = {
     // Locations
     getLocations: async (query?: string) => {
-        const response = await api.get<LocationMaster[]>('/AdminMaster/locations', { params: { query } });
+        const response = await api.post<LocationMaster[]>('/AdminMaster/locations-list', { query });
         return response.data;
     },
     saveLocation: async (location: Partial<LocationMaster>) => {
@@ -60,7 +60,7 @@ export const adminMasterService = {
 
     // Regions
     getRegions: async (query?: string) => {
-        const response = await api.get<RegionMaster[]>('/AdminMaster/regions', { params: { query } });
+        const response = await api.post<RegionMaster[]>('/AdminMaster/regions-list', { query });
         return response.data;
     },
     saveRegion: async (region: Partial<RegionMaster>) => {
@@ -70,7 +70,7 @@ export const adminMasterService = {
 
     // Key Inventory
     getKeys: async (query?: string) => {
-        const response = await api.get<KeyInventoryMaster[]>('/AdminMaster/key-inventory', { params: { query } });
+        const response = await api.post<KeyInventoryMaster[]>('/AdminMaster/key-inventory-list', { query });
         return response.data;
     },
     saveKey: async (key: Partial<KeyInventoryMaster>) => {
@@ -80,7 +80,7 @@ export const adminMasterService = {
 
     // Pending Requests
     getPendingRequests: async () => {
-        const response = await api.get<PendingLoginRequest[]>('/AdminMaster/pending-requests');
+        const response = await api.post<PendingLoginRequest[]>('/AdminMaster/pending-requests-list');
         return response.data;
     },
     processRequest: async (requestId: number, isApproved: boolean, comments: string) => {
@@ -90,11 +90,11 @@ export const adminMasterService = {
 
     // Mappings
     getCustodianMappings: async () => {
-        const response = await api.get<any[]>('/AdminMaster/mappings/custodian');
+        const response = await api.post<any[]>('/AdminMaster/mappings/custodian-list');
         return response.data;
     },
     getZomMappings: async () => {
-        const response = await api.get<any[]>('/AdminMaster/mappings/zom');
+        const response = await api.post<any[]>('/AdminMaster/mappings/zom-list');
         return response.data;
     },
 

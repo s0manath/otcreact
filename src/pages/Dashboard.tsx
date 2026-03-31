@@ -28,7 +28,10 @@ const Dashboard: React.FC = () => {
     const fetchDashboardData = async () => {
         setLoading(true);
         try {
-            const response = await api.get(`/dashboard/data?date=${selectedDate}`);
+            const response = await api.post('/dashboard/data', { 
+                date: selectedDate,
+                username: 'admin' 
+            });
             setDashboardData(response.data);
         } catch (error) {
             console.error('Error fetching dashboard data:', error);

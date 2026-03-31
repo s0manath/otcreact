@@ -2,11 +2,8 @@ import React, { useState, useRef } from 'react';
 import {
     Key,
     CheckCircle2,
-    XCircle,
-    AlertCircle,
     ChevronRight,
-    ArrowLeft,
-    Download
+    ArrowLeft
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';

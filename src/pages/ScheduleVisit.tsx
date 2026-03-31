@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import MasterPage from '../components/MasterPage';
 import {
     Calendar,
     Monitor,
@@ -46,13 +45,12 @@ const ScheduleVisit: React.FC = () => {
     const fetchScheduleData = async () => {
         setLoading(true);
         try {
-            const response = await api.get('/schedule/list', {
-                params: {
-                    fromDate: dateFrom,
-                    toDate: dateTo,
-                    searchField: searchField,
-                    startWith: startWith
-                }
+            const response = await api.post('/schedule/list', {
+                fromDate: dateFrom,
+                toDate: dateTo,
+                searchField: searchField,
+                startWith: startWith,
+                username: 'admin' // Added required field
             });
             setScheduleData(response.data);
         } catch (error) {
@@ -64,7 +62,7 @@ const ScheduleVisit: React.FC = () => {
 
     const fetchActivityTypes = async () => {
         try {
-            const response = await api.get('/schedule/activity-types');
+            const response = await api.post('/schedule/activity-types');
             setActivityTypes(response.data);
         } catch (error) {
             console.error('Error fetching activity types:', error);
@@ -91,7 +89,7 @@ const ScheduleVisit: React.FC = () => {
     const handleDelete = async (id: string) => {
         if (!window.confirm('Are you sure you want to delete this schedule?')) return;
         try {
-            await api.delete(`/schedule/${id}`);
+            await api.post('/schedule/delete', { id, username: 'admin' });
             fetchScheduleData();
         } catch (error: any) {
             alert('Error deleting schedule: ' + (error.response?.data?.message || error.message));

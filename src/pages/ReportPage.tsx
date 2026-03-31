@@ -8,19 +8,15 @@ import {
     Filter,
     RefreshCcw,
     Download,
-    LayoutGrid,
     ChevronUp,
-    ChevronDown,
-    Monitor
+    ChevronDown
 } from 'lucide-react';
-import axios from 'axios';
+import api from '../services/api';
 import ReportGrid from '../components/ReportGrid';
-
-const API_BASE = 'http://localhost:5218/api';
 
 const REPORT_INFO: Record<string, { title: string, subtitle: string, icon: any }> = {
     'scheduled': { title: 'Scheduled Details Report', subtitle: 'Operations / Resource Planning', icon: Calendar },
-    'route-details': { title: 'Route Mapped Report', subtitle: 'Logistics / Fleet Overview', icon: LayoutGrid },
+    'route-details': { title: 'Route Mapped Report', subtitle: 'Logistics / Fleet Overview', icon: FileText },
     'otc-checkout': { title: 'OTC Checkout Report', subtitle: 'Operations / Compliance', icon: FileText },
     'otc-activity': { title: 'OTC Activity Detail Report', subtitle: 'Audit / Performance', icon: RefreshCcw },
     'audit': { title: 'Audit Logs Report', subtitle: 'Security / Traceability', icon: FileText },
@@ -52,7 +48,7 @@ const ReportPage: React.FC = () => {
 
     const fetchFranchises = async () => {
         try {
-            const res = await axios.get(`${API_BASE}/report/franchises`);
+            const res = await api.post('/report/franchises');
             setFranchises(res.data);
         } catch (err) {
             console.error('Failed to fetch franchises');
@@ -62,7 +58,7 @@ const ReportPage: React.FC = () => {
     const fetchData = async () => {
         setLoading(true);
         try {
-            const res = await axios.post(`${API_BASE}/report/data`, {
+            const res = await api.post('/report/data', {
                 reportType: reportKey,
                 fromDate,
                 toDate,
