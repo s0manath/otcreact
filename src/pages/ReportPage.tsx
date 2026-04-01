@@ -40,6 +40,8 @@ const ReportPage: React.FC = () => {
     const [data, setData] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [isFilterOpen, setIsFilterOpen] = useState(true);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage] = useState(15);
 
     useEffect(() => {
         fetchFranchises();
@@ -69,6 +71,7 @@ const ReportPage: React.FC = () => {
             });
             setColumns(res.data.columns);
             setData(res.data.data);
+            setCurrentPage(1); // Reset to first page on new fetch
         } catch (err) {
             console.error('Failed to fetch report data');
         } finally {
@@ -203,7 +206,24 @@ const ReportPage: React.FC = () => {
             </AnimatePresence>
 
             <div className="px-8">
-                <ReportGrid columns={columns} data={data} isLoading={loading} />
+                {(() => {
+                    const totalPages = Math.ceil(data.length / itemsPerPage);
+                    const paginatedData = data.slice(
+                        (currentPage - 1) * itemsPerPage,
+                        currentPage * itemsPerPage
+                    );
+                    return (
+                        <ReportGrid 
+                            columns={columns} 
+                            data={paginatedData} 
+                            isLoading={loading} 
+                            currentPage={currentPage}
+                            totalPages={totalPages}
+                            totalRecords={data.length}
+                            onPageChange={(page) => setCurrentPage(page)}
+                        />
+                    );
+                })()}
             </div>
         </div>
     );

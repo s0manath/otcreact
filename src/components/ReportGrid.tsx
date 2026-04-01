@@ -6,9 +6,13 @@ interface ReportGridProps {
     columns: string[];
     data: any[];
     isLoading: boolean;
+    currentPage: number;
+    totalPages: number;
+    onPageChange: (page: number) => void;
+    totalRecords: number;
 }
 
-const ReportGrid: React.FC<ReportGridProps> = ({ columns, data, isLoading }) => {
+const ReportGrid: React.FC<ReportGridProps> = ({ columns, data, isLoading, currentPage, totalPages, onPageChange, totalRecords }) => {
     if (isLoading) {
         return (
             <div className="flex flex-col items-center justify-center py-24 bg-white rounded-[2.5rem] border border-slate-200 shadow-sm">
@@ -64,16 +68,50 @@ const ReportGrid: React.FC<ReportGridProps> = ({ columns, data, isLoading }) => 
                 </table>
             </div>
 
-            <div className="p-8 border-t border-slate-50 bg-slate-50/20 flex items-center justify-between font-sans">
-                <div className="flex items-center gap-2">
+            <div className="p-8 border-t border-slate-50 bg-slate-50/20 flex flex-col sm:flex-row items-center justify-between gap-4 font-sans">
+                <div className="flex items-center gap-4">
                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                        Total Records: <span className="text-slate-900 font-black italic">{data.length}</span>
+                        Total Records: <span className="text-slate-900 font-black italic">{totalRecords}</span>
                     </span>
-                </div>
-                <div className="flex items-center gap-2">
+                    <div className="h-4 w-px bg-slate-200 hidden sm:block" />
                     <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest italic">
                         Generated at {new Date().toLocaleTimeString()}
                     </span>
+                </div>
+
+                <div className="flex items-center gap-1">
+                    <button 
+                        onClick={() => onPageChange(1)}
+                        disabled={currentPage === 1}
+                        className="px-4 py-2 rounded-xl text-[10px] font-black uppercase text-slate-400 hover:text-slate-900 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                    >
+                        First
+                    </button>
+                    <button 
+                        onClick={() => onPageChange(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className="px-4 py-2 rounded-xl text-[10px] font-black uppercase text-slate-400 hover:text-slate-900 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                    >
+                        Prev
+                    </button>
+                    <div className="flex items-center gap-2 px-4 py-1.5 bg-white border border-slate-200 rounded-xl shadow-sm">
+                        <span className="text-xs font-black text-slate-900">{currentPage}</span>
+                        <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">of {totalPages || 1}</span>
+                    </div>
+                    <button 
+                        onClick={() => onPageChange(currentPage + 1)}
+                        disabled={currentPage === totalPages || totalPages === 0}
+                        className="px-4 py-2 rounded-xl text-[10px] font-black uppercase text-slate-900 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                    >
+                        Next
+                    </button>
+                    <button 
+                        onClick={() => onPageChange(totalPages)}
+                        disabled={currentPage === totalPages || totalPages === 0}
+                        className="px-4 py-2 rounded-xl text-[10px] font-black uppercase text-slate-900 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                    >
+                        Last
+                    </button>
                 </div>
             </div>
         </motion.div>

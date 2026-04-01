@@ -11,13 +11,16 @@ import {
     MapPin,
     ArrowUpRight,
     ArrowDownRight,
-    Loader2
+    Loader2,
+    ChevronLeft,
+    ChevronRight
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import api from '../services/api';
 
 const Dashboard: React.FC = () => {
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+    const [viewDate, setViewDate] = useState(new Date()); // Date object representing the month being viewed
     const [loading, setLoading] = useState(true);
     const [dashboardData, setDashboardData] = useState<any>({ stats: [], performance: [] });
 
@@ -99,18 +102,67 @@ const Dashboard: React.FC = () => {
                             <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest italic">Viewing Operations for {new Date(selectedDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
                         </div>
 
-                        {/* Custom Pure React Calendar Placeholder (Styled) */}
-                        <div className="w-full grid grid-cols-7 gap-1 text-center mb-8 bg-slate-50 p-4 rounded-3xl border border-slate-100">
-                            {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(d => <div key={d} className="text-[10px] font-black text-slate-300 py-2">{d}</div>)}
-                            {Array.from({ length: 31 }).map((_, i) => (
-                                <button
-                                    key={i}
-                                    onClick={() => setSelectedDate(`2026-02-${String(i + 1).padStart(2, '0')}`)}
-                                    className={`py-2 text-xs font-bold rounded-xl transition-all ${i + 1 === parseInt(selectedDate.split('-')[2]) ? 'bg-primary-600 text-white shadow-lg' : 'text-slate-600 hover:bg-white'}`}
-                                >
-                                    {i + 1}
-                                </button>
+                        {/* Month Navigator */}
+                        <div className="w-full flex items-center justify-between mb-4 px-2">
+                            <button 
+                                onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1))}
+                                className="p-2 hover:bg-slate-50 rounded-xl text-slate-400 hover:text-primary-600 transition-all shadow-sm border border-transparent hover:border-slate-100"
+                            >
+                                <ChevronLeft size={16} />
+                            </button>
+                            <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">
+                                {viewDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
+                            </h3>
+                            <button 
+                                onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1))}
+                                className="p-2 hover:bg-slate-50 rounded-xl text-slate-400 hover:text-primary-600 transition-all shadow-sm border border-transparent hover:border-slate-100"
+                            >
+                                <ChevronRight size={16} />
+                            </button>
+                        </div>
+
+                        {/* Custom Pure React Calendar Grid */}
+                        <div className="w-full grid grid-cols-7 gap-1 text-center mb-8 bg-slate-50 p-4 rounded-3xl border border-slate-100 shadow-inner">
+                            {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(d => (
+                                <div key={d} className="text-[10px] font-black text-slate-300 py-2">{d}</div>
                             ))}
+                            {(() => {
+                                const year = viewDate.getFullYear();
+                                const month = viewDate.getMonth();
+                                const firstDay = new Date(year, month, 1).getDay();
+                                const daysInMonth = new Date(year, month + 1, 0).getDate();
+                                
+                                const days = [];
+                                // Padding for first day
+                                for (let i = 0; i < firstDay; i++) {
+                                    days.push(<div key={`pad-${i}`} />);
+                                }
+                                // Actual days
+                                for (let d = 1; d <= daysInMonth; d++) {
+                                    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                                    const isSelected = selectedDate === dateStr;
+                                    const isToday = new Date().toISOString().split('T')[0] === dateStr;
+
+                                    days.push(
+                                        <button
+                                            key={d}
+                                            onClick={() => setSelectedDate(dateStr)}
+                                            className={`
+                                                relative py-2.5 text-xs font-bold rounded-xl transition-all group
+                                                ${isSelected 
+                                                    ? 'bg-primary-600 text-white shadow-lg shadow-primary-600/30 scale-110 z-10' 
+                                                    : 'text-slate-600 hover:bg-white hover:text-primary-600'}
+                                            `}
+                                        >
+                                            {d}
+                                            {isToday && !isSelected && (
+                                                <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary-500" />
+                                            )}
+                                        </button>
+                                    );
+                                }
+                                return days;
+                            })()}
                         </div>
 
                         <div className="w-full mt-auto space-y-4">
