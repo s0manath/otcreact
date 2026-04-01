@@ -5,29 +5,35 @@ import {
     User,
     MessageSquare,
     Hash,
-    Plus,
-    Upload,
     Search,
-    Filter,
+    Plus,
     ChevronDown,
     ChevronUp,
     Loader2,
     Trash2,
-    X
+    X,
+    CloudDownload,
+    RefreshCw
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
+import Toast from '../components/Toast';
+import ScheduleBulkUploadModal from '../components/ScheduleBulkUploadModal';
 
 const ScheduleVisit: React.FC = () => {
-    const [isFilterOpen, setIsFilterOpen] = useState(false);
+    const [isRangePopupOpen, setIsRangePopupOpen] = useState(false);
     const [dateFrom, setDateFrom] = useState(new Date().toISOString().split('T')[0]);
     const [dateTo, setDateTo] = useState(new Date().toISOString().split('T')[0]);
-    const [searchField, setSearchField] = useState('None');
-    const [startWith, setStartWith] = useState('');
     const [loading, setLoading] = useState(true);
     const [scheduleData, setScheduleData] = useState<any[]>([]);
     const [activityTypes, setActivityTypes] = useState<any[]>([]);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
+    const [lastUpdated, setLastUpdated] = useState<string>(new Date().toLocaleTimeString());
+    const [toast, setToast] = useState({ isVisible: false, message: '', type: 'error' as 'error' | 'success' });
+    const [globalSearch, setGlobalSearch] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage] = useState(15);
 
     // Form State
     const [newSchedule, setNewSchedule] = useState({
@@ -43,18 +49,42 @@ const ScheduleVisit: React.FC = () => {
     }, []);
 
     const fetchScheduleData = async () => {
+        // --- Validation Logic ---
+        const start = new Date(dateFrom);
+        const end = new Date(dateTo);
+        const today = new Date();
+        today.setHours(23, 59, 59, 999);
+
+        if (start > today || end > today) {
+            setToast({ isVisible: true, message: "Future dates are not permitted.", type: 'error' });
+            return;
+        }
+
+        const diffInDays = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
+        if (diffInDays > 31) {
+            setToast({ isVisible: true, message: "Date range cannot exceed 1 month.", type: 'error' });
+            return;
+        }
+        if (diffInDays < 0) {
+            setToast({ isVisible: true, message: "To Date cannot be before From Date.", type: 'error' });
+            return;
+        }
+
         setLoading(true);
         try {
             const response = await api.post('/schedule/list', {
                 fromDate: dateFrom,
                 toDate: dateTo,
-                searchField: searchField,
-                startWith: startWith,
-                username: 'admin' // Added required field
+                searchField: 'None',
+                startWith: '',
+                username: 'Likhith'
             });
             setScheduleData(response.data);
+            setLastUpdated(new Date().toLocaleTimeString());
+            setIsRangePopupOpen(false);
         } catch (error) {
             console.error('Error fetching schedule data:', error);
+            setToast({ isVisible: true, message: "Failed to fetch schedule data.", type: 'error' });
         } finally {
             setLoading(false);
         }
@@ -76,7 +106,7 @@ const ScheduleVisit: React.FC = () => {
                 atmid: newSchedule.atmid,
                 activityType: newSchedule.activityType,
                 scheduleDate: newSchedule.scheduleDate,
-                username: 'admin' // Should be from auth context
+                username: 'Likhith' // Should be from auth context
             });
             setIsAddModalOpen(false);
             setNewSchedule({ atmid: '', activityType: '', scheduleDate: new Date().toISOString().split('T')[0], comment: '' });
@@ -89,7 +119,7 @@ const ScheduleVisit: React.FC = () => {
     const handleDelete = async (id: string) => {
         if (!window.confirm('Are you sure you want to delete this schedule?')) return;
         try {
-            await api.post('/schedule/delete', { id, username: 'admin' });
+            await api.post('/schedule/delete', { id, username: 'Likhith' });
             fetchScheduleData();
         } catch (error: any) {
             alert('Error deleting schedule: ' + (error.response?.data?.message || error.message));
@@ -174,30 +204,122 @@ const ScheduleVisit: React.FC = () => {
         },
     ];
 
+    // Global filtering and Pagination logic
+    const filteredData = scheduleData.filter(item => {
+        const searchStr = `${item.atmid} ${item.schedule_Id} ${item.activity_Type} ${item.createdBy} ${item.comment}`.toLowerCase();
+        return searchStr.includes(globalSearch.toLowerCase());
+    });
+
+    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+    const paginatedData = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+    const handlePageChange = (page: number) => {
+        if (page >= 1 && page <= totalPages) {
+            setCurrentPage(page);
+        }
+    };
+
     return (
         <div className="space-y-6">
             {/* Header Action Bar */}
             <div className="px-8 pt-8 flex items-center justify-between">
-                <div>
-                    <h1 className="text-2xl font-black text-slate-900 tracking-tight">Schedule Visit</h1>
-                    <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest italic">Operations / Scheduling</p>
+                <div className="flex items-center gap-4">
+                    <div>
+                        <h1 className="text-2xl font-black text-slate-900 tracking-tight">Schedule Visit</h1>
+                        <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest italic">Operations / Scheduling</p>
+                    </div>
+                    <button
+                        onClick={fetchScheduleData}
+                        className="group flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-full hover:bg-white hover:border-primary-500 transition-all active:scale-95 shadow-sm"
+                    >
+                        <div className={`w-2 h-2 rounded-full bg-emerald-500 ${loading ? 'animate-pulse' : ''}`} />
+                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 group-hover:text-primary-600">
+                            Last Sync: {lastUpdated}
+                        </span>
+                        <RefreshCw size={10} className={`text-slate-400 group-hover:text-primary-500 ${loading ? 'animate-spin' : ''}`} />
+                    </button>
                 </div>
 
                 <div className="flex items-center gap-3">
-                    <button
-                        onClick={() => setIsFilterOpen(!isFilterOpen)}
-                        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all border ${isFilterOpen
-                            ? 'bg-slate-900 text-white border-slate-900 shadow-lg shadow-slate-900/20'
-                            : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300 shadow-sm'
-                            }`}
-                    >
-                        <Filter size={16} />
-                        Filter Data
-                        {isFilterOpen ? <ChevronUp size={14} className="ml-1 opacity-60" /> : <ChevronDown size={14} className="ml-1 opacity-60" />}
-                    </button>
+                    <div className="relative group">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary-500 transition-colors">
+                            <Search size={14} />
+                        </div>
+                        <input
+                            type="text"
+                            placeholder="Global Search..."
+                            className="bg-white border border-slate-200 rounded-xl py-2.5 pl-9 pr-4 text-xs font-bold text-slate-700 outline-none focus:border-primary-500 focus:ring-4 focus:ring-primary-500/5 transition-all w-64 shadow-sm"
+                            value={globalSearch}
+                            onChange={(e) => {
+                                setGlobalSearch(e.target.value);
+                                setCurrentPage(1);
+                            }}
+                        />
+                    </div>
 
-                    <button className="flex items-center gap-2 px-4 py-2.5 bg-white text-slate-600 border border-slate-200 rounded-xl text-xs font-bold hover:border-slate-300 shadow-sm transition-all group">
-                        <Upload size={16} className="text-slate-400 group-hover:text-primary-500 transition-colors" />
+                    <div className="relative">
+                        <button
+                            onClick={() => setIsRangePopupOpen(!isRangePopupOpen)}
+                            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all border ${isRangePopupOpen
+                                ? 'bg-slate-900 text-white border-slate-900 shadow-lg shadow-slate-900/20'
+                                : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300 shadow-sm'
+                                }`}
+                        >
+                            <Calendar size={16} className={isRangePopupOpen ? 'text-primary-400' : 'text-slate-400'} />
+                            Date Range
+                            {isRangePopupOpen ? <ChevronUp size={14} className="ml-1 opacity-60" /> : <ChevronDown size={14} className="ml-1 opacity-60" />}
+                        </button>
+
+                        <AnimatePresence>
+                            {isRangePopupOpen && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                    className="absolute right-0 mt-3 w-72 bg-white rounded-2xl shadow-2xl border border-slate-100 p-5 z-50 overflow-hidden text-left"
+                                >
+                                    <div className="space-y-4">
+                                        <div className="space-y-1.5">
+                                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1 italic">From</label>
+                                            <div className="relative">
+                                                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                                                <input
+                                                    type="date"
+                                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 pl-10 pr-4 text-xs font-bold text-slate-700 focus:bg-white outline-none"
+                                                    value={dateFrom}
+                                                    onChange={(e) => setDateFrom(e.target.value)}
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1 italic">To</label>
+                                            <div className="relative">
+                                                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                                                <input
+                                                    type="date"
+                                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 pl-10 pr-4 text-xs font-bold text-slate-700 focus:bg-white outline-none"
+                                                    value={dateTo}
+                                                    onChange={(e) => setDateTo(e.target.value)}
+                                                />
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={fetchScheduleData}
+                                            className="w-full bg-primary-600 text-white rounded-xl py-3 text-xs font-black uppercase tracking-widest hover:bg-primary-700 transition-all flex items-center justify-center gap-2 mt-2"
+                                        >
+                                            {loading ? <Loader2 size={14} className="animate-spin" /> : 'Apply Filter'}
+                                        </button>
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
+
+                    <button 
+                        onClick={() => setIsBulkModalOpen(true)}
+                        className="flex items-center gap-2 px-4 py-2.5 bg-white text-slate-600 border border-slate-200 rounded-xl text-xs font-bold hover:border-slate-300 shadow-sm transition-all group"
+                    >
+                        <CloudDownload size={16} className="text-emerald-500" />
                         Bulk Upload
                     </button>
 
@@ -211,79 +333,6 @@ const ScheduleVisit: React.FC = () => {
                 </div>
             </div>
 
-            {/* Collapsible Filter Panel */}
-            <AnimatePresence>
-                {isFilterOpen && (
-                    <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        className="px-8 overflow-hidden"
-                    >
-                        <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-slate-200 grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 gap-6 items-end">
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Date From</label>
-                                <div className="relative">
-                                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
-                                    <input
-                                        type="date"
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 pl-10 pr-4 text-xs font-bold text-slate-700 focus:bg-white focus:ring-4 focus:ring-primary-500/5 transition-all outline-none"
-                                        value={dateFrom}
-                                        onChange={(e) => setDateFrom(e.target.value)}
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Date To</label>
-                                <div className="relative">
-                                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
-                                    <input
-                                        type="date"
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 pl-10 pr-4 text-xs font-bold text-slate-700 focus:bg-white focus:ring-4 focus:ring-primary-500/5 transition-all outline-none"
-                                        value={dateTo}
-                                        onChange={(e) => setDateTo(e.target.value)}
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Search Field</label>
-                                <select
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-4 text-xs font-bold text-slate-700 focus:bg-white transition-all outline-none appearance-none cursor-pointer"
-                                    value={searchField}
-                                    onChange={(e) => setSearchField(e.target.value)}
-                                >
-                                    <option value="None">None</option>
-                                    <option value="ATM_Schedule.ATMID">ATM ID</option>
-                                    <option value="ATM_Schedule.Activity_Type">Activity Type</option>
-                                </select>
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Starts With</label>
-                                <div className="relative">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
-                                    <input
-                                        type="text"
-                                        placeholder="Type key..."
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 pl-10 pr-4 text-xs font-bold text-slate-700 focus:bg-white outline-none transition-all"
-                                        value={startWith}
-                                        onChange={(e) => setStartWith(e.target.value)}
-                                    />
-                                </div>
-                            </div>
-
-                            <button
-                                onClick={fetchScheduleData}
-                                className="bg-primary-600 text-white rounded-xl py-2.5 px-6 text-xs font-black shadow-lg shadow-primary-600/20 hover:scale-[1.02] active:scale-95 transition-all uppercase tracking-widest"
-                            >
-                                View Report
-                            </button>
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
 
             {/* Grid Section */}
             <div className="px-8 relative">
@@ -304,7 +353,7 @@ const ScheduleVisit: React.FC = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {scheduleData.map((row, idx) => (
+                                {paginatedData.map((row, idx) => (
                                     <tr key={idx} className="group hover:bg-slate-50/50 transition-all border-b border-slate-50 last:border-none">
                                         {columns.map(col => (
                                             <td key={col.key} className="px-8 py-5">
@@ -330,18 +379,18 @@ const ScheduleVisit: React.FC = () => {
                     {/* Modern Pager */}
                     <div className="p-8 border-t border-slate-50 bg-slate-50/20 flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Records: <span className="text-slate-900">{scheduleData.length}</span></span>
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Records: <span className="text-slate-900">{filteredData.length}</span></span>
                         </div>
 
                         <div className="flex items-center gap-1">
-                            <button className="px-4 py-2 rounded-xl text-[10px] font-black uppercase text-slate-400 hover:text-slate-900 transition-colors">First</button>
-                            <button className="px-4 py-2 rounded-xl text-[10px] font-black uppercase text-slate-400 hover:text-slate-900 transition-colors">Prev</button>
+                            <button onClick={() => handlePageChange(1)} className="px-4 py-2 rounded-xl text-[10px] font-black uppercase text-slate-400 hover:text-slate-900 transition-colors">First</button>
+                            <button onClick={() => handlePageChange(currentPage - 1)} className="px-4 py-2 rounded-xl text-[10px] font-black uppercase text-slate-400 hover:text-slate-900 transition-colors">Prev</button>
                             <div className="flex items-center gap-2 px-4 py-1.5 bg-white border border-slate-200 rounded-xl">
-                                <span className="text-xs font-black text-slate-900">1</span>
-                                <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">of 5</span>
+                                <span className="text-xs font-black text-slate-900">{currentPage}</span>
+                                <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">of {totalPages || 1}</span>
                             </div>
-                            <button className="px-4 py-2 rounded-xl text-[10px] font-black uppercase text-slate-900">Next</button>
-                            <button className="px-4 py-2 rounded-xl text-[10px] font-black uppercase text-slate-900">Last</button>
+                            <button onClick={() => handlePageChange(currentPage + 1)} className="px-4 py-2 rounded-xl text-[10px] font-black uppercase text-slate-900">Next</button>
+                            <button onClick={() => handlePageChange(totalPages)} className="px-4 py-2 rounded-xl text-[10px] font-black uppercase text-slate-900">Last</button>
                         </div>
                     </div>
                 </div>
@@ -443,6 +492,19 @@ const ScheduleVisit: React.FC = () => {
                     </div>
                 )}
             </AnimatePresence>
+
+            <ScheduleBulkUploadModal 
+                isOpen={isBulkModalOpen}
+                onClose={() => setIsBulkModalOpen(false)}
+                onSuccess={fetchScheduleData}
+            />
+
+            <Toast 
+                isVisible={toast.isVisible}
+                message={toast.message}
+                type={toast.type}
+                onClose={() => setToast({ ...toast, isVisible: false })}
+            />
         </div>
     );
 };
