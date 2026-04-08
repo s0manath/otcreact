@@ -1,19 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from 'react';
-import {
-    Calendar,
-    Monitor,
-    User,
-    MessageSquare,
-    Hash,
-    Search,
-    Plus,
-    ChevronDown,
-    ChevronUp,
-    Loader2,
-    Trash2,
-    X,
-    CloudDownload,
-    RefreshCw
+import {Calendar,Monitor,User,MessageSquare,Hash,Search,Plus,ChevronDown,ChevronUp,Loader2,X,CloudDownload,RefreshCw,UserRoundPen
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
@@ -102,34 +89,33 @@ const ScheduleVisit: React.FC = () => {
     const handleAddSchedule = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await api.post('/schedule', {
-                atmid: newSchedule.atmid,
+            await api.post('/schedule/insert', {
+                atmId: newSchedule.atmid,
                 activityType: newSchedule.activityType,
                 scheduleDate: newSchedule.scheduleDate,
-                username: 'Likhith' // Should be from auth context
+                username: 'Likhith',
+                comment: newSchedule.comment
+                 // Should be from auth context
             });
             setIsAddModalOpen(false);
             setNewSchedule({ atmid: '', activityType: '', scheduleDate: new Date().toISOString().split('T')[0], comment: '' });
+            setToast({ isVisible: true, message: "Schedule added successfully!", type: 'success' });
             fetchScheduleData();
         } catch (error: any) {
-            alert('Error adding schedule: ' + (error.response?.data?.message || error.message));
+            setToast({ isVisible: true, message: 'Error adding schedule: ' + (error.response?.data?.message || error.message), type: 'error' });
         }
     };
 
-    const handleDelete = async (id: string) => {
-        if (!window.confirm('Are you sure you want to delete this schedule?')) return;
-        try {
-            await api.post('/schedule/delete', { id, username: 'Likhith' });
-            fetchScheduleData();
-        } catch (error: any) {
-            alert('Error deleting schedule: ' + (error.response?.data?.message || error.message));
-        }
+    const handleEdit = async (id: string) => {
+        // Implement edit functionality (e.g., open a modal with pre-filled data, then call an API to update)
+        alert(`Edit functionality for Schedule ID: ${id} is not implemented yet.`);
+        
     };
 
     const columns = [
         {
             header: 'Scheduled ID',
-            key: 'schedule_Id',
+            key: 'scheduleId',
             render: (val: any) => (
                 <button className="text-primary-600 font-black text-xs hover:underline flex items-center gap-1 group">
                     <Hash size={10} className="text-primary-400 group-hover:text-primary-600" />
@@ -139,7 +125,7 @@ const ScheduleVisit: React.FC = () => {
         },
         {
             header: 'ATM ID',
-            key: 'atmid',
+            key: 'atmId',
             render: (val: any) => (
                 <div className="flex items-center gap-2">
                     <div className="w-7 h-7 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 border border-slate-100">
@@ -151,7 +137,7 @@ const ScheduleVisit: React.FC = () => {
         },
         {
             header: 'Activity Type',
-            key: 'activity_Type',
+            key: 'activityType',
             render: (val: any) => (
                 <div className="flex items-center gap-2">
                     <div className={`px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border ${val?.includes('Repair') ? 'bg-rose-50 text-rose-600 border-rose-100' :
@@ -165,7 +151,7 @@ const ScheduleVisit: React.FC = () => {
         },
         {
             header: 'Schedule Date',
-            key: 'schedule_Date',
+            key: 'scheduleDate',
             render: (val: any) => (
                 <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
                     <Calendar size={12} className="text-slate-400" />
@@ -206,7 +192,7 @@ const ScheduleVisit: React.FC = () => {
 
     // Global filtering and Pagination logic
     const filteredData = scheduleData.filter(item => {
-        const searchStr = `${item.atmid} ${item.schedule_Id} ${item.activity_Type} ${item.createdBy} ${item.comment}`.toLowerCase();
+        const searchStr = `${item.atmId} ${item.scheduleId} ${item.activityType} ${item.createdBy} ${item.comment}`.toLowerCase();
         return searchStr.includes(globalSearch.toLowerCase());
     });
 
@@ -364,10 +350,10 @@ const ScheduleVisit: React.FC = () => {
                                         ))}
                                         <td className="px-8 py-5 text-right">
                                             <button
-                                                onClick={() => handleDelete(row.schedule_Id)}
+                                                onClick={() => handleEdit(row.schedule_Id)}
                                                 className="p-2 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
                                             >
-                                                <Trash2 size={16} />
+                                                <UserRoundPen size={16} />
                                             </button>
                                         </td>
                                     </tr>

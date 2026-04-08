@@ -33,7 +33,7 @@ const Dashboard: React.FC = () => {
         try {
             const response = await api.post('/dashboard/data', { 
                 date: selectedDate,
-                username: 'admin' 
+                username: 'Likhith' 
             });
             setDashboardData(response.data);
         } catch (error) {

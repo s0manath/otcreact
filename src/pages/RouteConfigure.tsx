@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from 'react';
 import {
     Calendar,
@@ -19,6 +21,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
 import RouteConfigureModal from '../components/RouteConfigureModal';
 import Toast from '../components/Toast';
+import { decrypt, encrypt } from '../utils/crypto-utils';
 
 const RouteConfigure: React.FC = () => {
     const [isRangePopupOpen, setIsRangePopupOpen] = useState(false);
@@ -108,6 +111,8 @@ const RouteConfigure: React.FC = () => {
                 searchValue: '',
                 username: 'Likhith'
             });
+            console.log('Fetched route data:', response.data);
+            console.log('Applied filters:', decrypt(encrypt(filters)));
             setRouteData(response.data);
             setLastUpdated(new Date().toLocaleTimeString());
             setIsRangePopupOpen(false); // Close popup on success
@@ -138,7 +143,7 @@ const RouteConfigure: React.FC = () => {
         },
         {
             header: 'ATM ID',
-            key: 'atmid',
+            key: 'atmId',
             render: (val: any, _row: any) => (
                 <div className="flex items-center gap-2">
                     <div className="w-7 h-7 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 border border-slate-100 shrink-0">
@@ -148,10 +153,10 @@ const RouteConfigure: React.FC = () => {
                 </div>
             )
         },
-        { header: 'Activity Type', key: 'activity_Type' },
+        { header: 'Activity Type', key: 'activityType' },
         {
             header: 'Schedule Date',
-            key: 'schedule_Date',
+            key: 'scheduleDate',
             render: (val: any, _row: any) => (
                 <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 italic">
                     <Calendar size={10} className="text-slate-300" />
@@ -159,7 +164,7 @@ const RouteConfigure: React.FC = () => {
                 </div>
             )
         },
-        { header: 'District Name', key: 'district_Name' },
+        { header: 'District Name', key: 'districtName' },
         {
             header: 'Route Key',
             key: 'routeKey',
@@ -190,15 +195,15 @@ const RouteConfigure: React.FC = () => {
             key: 'status',
             render: (val: any, _row: any) => (
                 <div className="flex items-center gap-2">
-                    {val === 'Completed' ? (
+                    {val === 'OTC Checkout' ? (
                         <div className="flex items-center gap-1.5 px-3 py-0.5 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100 italic transition-all">
                             <CheckCircle2 size={10} className="stroke-[3]" />
-                            <span className="text-[9px] font-black uppercase tracking-wider">Done</span>
+                            <span className="text-[9px] font-black uppercase tracking-wider">{val}</span>
                         </div>
                     ) : (
                         <div className="flex items-center gap-1.5 px-3 py-0.5 bg-amber-50 text-amber-600 rounded-full border border-amber-100 italic transition-all">
                             <Clock size={10} className="stroke-[3]" />
-                            <span className="text-[9px] font-black uppercase tracking-wider">Wait</span>
+                            <span className="text-[9px] font-black uppercase tracking-wider">{val}</span>
                         </div>
                     )}
                 </div>
@@ -209,7 +214,7 @@ const RouteConfigure: React.FC = () => {
 
     // Global filtering and Pagination logic
     const filteredData = routeData.filter(item => {
-        const searchStr = `${item.atmid} ${item.routeKey} ${item.custodian1} ${item.custodian2} ${item.address} ${item.city} ${item.region} ${item.district}`.toLowerCase();
+        const searchStr = `${item.id} ${item.atmId} ${item.activityType} ${item.scheduleDate} ${item.croType} {} ${item.routeKey} ${item.custodian1} ${item.custodian2}  ${item.districtName}`.toLowerCase();
         return searchStr.includes(globalSearch.toLowerCase());
     });
 
