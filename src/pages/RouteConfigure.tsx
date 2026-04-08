@@ -44,7 +44,7 @@ const RouteConfigure: React.FC = () => {
         searchValue: ''
     });
 
-    const [selectedRoute, setSelectedRoute] = useState<{ id: string, atmid: string } | null>(null);
+    const [selectedRoute, setSelectedRoute] = useState<{ scheduleId: string, atmId: string } | null>(null);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
     // Global filter and Pagination states
@@ -128,8 +128,8 @@ const RouteConfigure: React.FC = () => {
         }
     };
 
-    const handleEdit = (scheduleId: string, atmid: string) => {
-        setSelectedRoute({ id: scheduleId, atmid });
+    const handleEdit = (scheduleId: string, atmId: string) => {
+        setSelectedRoute({ scheduleId, atmId });
         setIsEditModalOpen(true);
     };
 
@@ -228,13 +228,13 @@ const RouteConfigure: React.FC = () => {
     };
 
     const handleDownload = (row: any) => {
-        console.log('Downloading attachment for:', row.atmid);
-        alert(`Downloading attachment for ATM: ${row.atmid} (Available in Production)`);
+        console.log('Downloading attachment for:', row.atmId);
+        alert(`Downloading attachment for ATM: ${row.atmId} (Available in Production)`);
     };
 
     const handlePreview = (row: any) => {
-        console.log('Previewing:', row.atmid);
-        alert(`Opening Preview for ATM: ${row.atmid} (Implemented for Production)`);
+        console.log('Previewing:', row.atmId);
+        alert(`Opening Preview for ATM: ${row.atmId} (Implemented for Production)`);
     };
 
     const handleExport = () => {
@@ -398,7 +398,7 @@ const RouteConfigure: React.FC = () => {
                                                     <CloudDownload size={16} />
                                                 </button>
                                                 <button
-                                                    onClick={() => handleEdit(row.id, row.atmid)}
+                                                    onClick={() => handleEdit(row.id, row.atmId)}
                                                     className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-all"
                                                     title="Configure"
                                                 >
@@ -469,8 +469,8 @@ const RouteConfigure: React.FC = () => {
             <RouteConfigureModal
                 isOpen={isEditModalOpen}
                 onClose={() => setIsEditModalOpen(false)}
-                scheduleId={selectedRoute?.id || ''}
-                atmid={selectedRoute?.atmid || ''}
+                scheduleId={selectedRoute?.scheduleId || ''}
+                atmId={selectedRoute?.atmId || ''}
                 onSuccess={fetchRouteData}
             />
 

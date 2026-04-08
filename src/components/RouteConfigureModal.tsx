@@ -7,11 +7,11 @@ interface RouteConfigureModalProps {
     isOpen: boolean;
     onClose: () => void;
     scheduleId: string;
-    atmid: string;
+    atmId: string;
     onSuccess: () => void;
 }
 
-const RouteConfigureModal: React.FC<RouteConfigureModalProps> = ({ isOpen, onClose, scheduleId, atmid, onSuccess }) => {
+const RouteConfigureModal: React.FC<RouteConfigureModalProps> = ({ isOpen, onClose, scheduleId, atmId, onSuccess }) => {
     const [loading, setLoading] = useState(false);
     const [custodians, setCustodians] = useState<any[]>([]);
     const [routeKey, setRouteKey] = useState('');
@@ -54,7 +54,7 @@ const RouteConfigureModal: React.FC<RouteConfigureModalProps> = ({ isOpen, onClo
         try {
             await api.post('/route/save', {
                 scheduleId,
-                atmid,
+                atmId,
                 routeKey,
                 custodian1,
                 custodian2,

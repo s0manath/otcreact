@@ -15,6 +15,7 @@ const ScheduleVisit: React.FC = () => {
     const [scheduleData, setScheduleData] = useState<any[]>([]);
     const [activityTypes, setActivityTypes] = useState<any[]>([]);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
     const [lastUpdated, setLastUpdated] = useState<string>(new Date().toLocaleTimeString());
     const [toast, setToast] = useState({ isVisible: false, message: '', type: 'error' as 'error' | 'success' });
@@ -30,13 +31,14 @@ const ScheduleVisit: React.FC = () => {
         comment: ''
     });
 
+    const [editSchedule, setEditSchedule] = useState<any>(null);
+
     useEffect(() => {
         fetchScheduleData();
         fetchActivityTypes();
     }, []);
 
     const fetchScheduleData = async () => {
-        // --- Validation Logic ---
         const start = new Date(dateFrom);
         const end = new Date(dateTo);
         const today = new Date();
@@ -95,7 +97,6 @@ const ScheduleVisit: React.FC = () => {
                 scheduleDate: newSchedule.scheduleDate,
                 username: 'Likhith',
                 comment: newSchedule.comment
-                 // Should be from auth context
             });
             setIsAddModalOpen(false);
             setNewSchedule({ atmid: '', activityType: '', scheduleDate: new Date().toISOString().split('T')[0], comment: '' });
@@ -106,11 +107,38 @@ const ScheduleVisit: React.FC = () => {
         }
     };
 
-    const handleEdit = async (id: string) => {
-        // Implement edit functionality (e.g., open a modal with pre-filled data, then call an API to update)
-        alert(`Edit functionality for Schedule ID: ${id} is not implemented yet.`);
-        
+    const handleUpdateSchedule = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            await api.post('/schedule/update', {
+                scheduleId: editSchedule.scheduleId,
+                atmId: editSchedule.atmId,
+                activityType: editSchedule.activityType,
+                scheduleDate: editSchedule.scheduleDate,
+                comment: editSchedule.comment,
+                username: 'Likhith'
+            });
+            setIsEditModalOpen(false);
+            setToast({ isVisible: true, message: "Schedule updated successfully!", type: 'success' });
+            fetchScheduleData();
+        } catch (error: any) {
+            setToast({ isVisible: true, message: 'Error updating schedule: ' + (error.response?.data?.message || error.message), type: 'error' });
+        }
     };
+
+    const openEditModal = (row: any) => {
+        // Ensure scheduleDate is formatted as YYYY-MM-DD for the date input
+        const formattedDate = row.scheduleDate 
+            ? row.scheduleDate.split('T')[0].split(' ')[0] 
+            : new Date().toISOString().split('T')[0];
+            
+        setEditSchedule({ 
+            ...row,
+            scheduleDate: formattedDate
+        });
+        setIsEditModalOpen(true);
+    };
+
 
     const columns = [
         {
@@ -190,7 +218,6 @@ const ScheduleVisit: React.FC = () => {
         },
     ];
 
-    // Global filtering and Pagination logic
     const filteredData = scheduleData.filter(item => {
         const searchStr = `${item.atmId} ${item.scheduleId} ${item.activityType} ${item.createdBy} ${item.comment}`.toLowerCase();
         return searchStr.includes(globalSearch.toLowerCase());
@@ -207,7 +234,6 @@ const ScheduleVisit: React.FC = () => {
 
     return (
         <div className="space-y-6">
-            {/* Header Action Bar */}
             <div className="px-8 pt-8 flex items-center justify-between">
                 <div className="flex items-center gap-4">
                     <div>
@@ -319,8 +345,6 @@ const ScheduleVisit: React.FC = () => {
                 </div>
             </div>
 
-
-            {/* Grid Section */}
             <div className="px-8 relative">
                 {loading && (
                     <div className="absolute inset-0 bg-white/50 backdrop-blur-[2px] z-20 flex items-center justify-center rounded-[2.5rem]">
@@ -350,7 +374,7 @@ const ScheduleVisit: React.FC = () => {
                                         ))}
                                         <td className="px-8 py-5 text-right">
                                             <button
-                                                onClick={() => handleEdit(row.schedule_Id)}
+                                                onClick={() => openEditModal(row)}
                                                 className="p-2 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
                                             >
                                                 <UserRoundPen size={16} />
@@ -362,7 +386,6 @@ const ScheduleVisit: React.FC = () => {
                         </table>
                     </div>
 
-                    {/* Modern Pager */}
                     <div className="p-8 border-t border-slate-50 bg-slate-50/20 flex items-center justify-between">
                         <div className="flex items-center gap-2">
                             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Records: <span className="text-slate-900">{filteredData.length}</span></span>
@@ -382,97 +405,87 @@ const ScheduleVisit: React.FC = () => {
                 </div>
             </div>
 
-            {/* Add Schedule Modal */}
             <AnimatePresence>
                 {isAddModalOpen && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            onClick={() => setIsAddModalOpen(false)}
-                            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
-                        />
-                        <motion.div
-                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
-                            animate={{ scale: 1, opacity: 1, y: 0 }}
-                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                            className="bg-white rounded-[2.5rem] w-full max-w-lg overflow-hidden shadow-2xl relative z-10 border border-slate-100"
-                        >
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsAddModalOpen(false)} className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" />
+                        <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }} className="bg-white rounded-[2.5rem] w-full max-w-lg overflow-hidden shadow-2xl relative z-10 border border-slate-100">
                             <div className="p-8 pb-4 flex items-center justify-between border-b border-slate-50">
                                 <div>
                                     <h2 className="text-xl font-black text-slate-900">Add New Schedule</h2>
                                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest italic">Operations / Manual Scheduling</p>
                                 </div>
-                                <button onClick={() => setIsAddModalOpen(false)} className="p-2 hover:bg-slate-50 rounded-xl transition-colors">
-                                    <X size={20} className="text-slate-400" />
-                                </button>
+                                <button onClick={() => setIsAddModalOpen(false)} className="p-2 hover:bg-slate-50 rounded-xl transition-colors"><X size={20} className="text-slate-400" /></button>
                             </div>
-
                             <form onSubmit={handleAddSchedule} className="p-8 space-y-6">
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">ATM ID</label>
                                     <div className="relative">
                                         <Monitor className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                                        <input
-                                            type="text"
-                                            required
-                                            placeholder="Enter ATM ID (e.g. ATM00124)"
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3.5 pl-12 pr-4 text-sm font-bold text-slate-700 focus:bg-white focus:ring-4 focus:ring-primary-600/5 transition-all outline-none"
-                                            value={newSchedule.atmid}
-                                            onChange={(e) => setNewSchedule({ ...newSchedule, atmid: e.target.value })}
-                                        />
+                                        <input type="text" required placeholder="Enter ATM ID" className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3.5 pl-12 pr-4 text-sm font-bold text-slate-700 focus:bg-white focus:ring-4 focus:ring-primary-600/5 transition-all outline-none" value={newSchedule.atmid} onChange={(e) => setNewSchedule({ ...newSchedule, atmid: e.target.value })} />
                                     </div>
                                 </div>
-
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Activity Type</label>
-                                        <select
-                                            required
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3.5 px-4 text-sm font-bold text-slate-700 focus:bg-white transition-all outline-none appearance-none cursor-pointer"
-                                            value={newSchedule.activityType}
-                                            onChange={(e) => setNewSchedule({ ...newSchedule, activityType: e.target.value })}
-                                        >
+                                        <select required className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3.5 px-4 text-sm font-bold text-slate-700 focus:bg-white transition-all outline-none appearance-none cursor-pointer" value={newSchedule.activityType} onChange={(e) => setNewSchedule({ ...newSchedule, activityType: e.target.value })}>
                                             <option value="">Select Activity</option>
-                                            {activityTypes.map((type: any, i: number) => (
-                                                <option key={i} value={type.name}>{type.name}</option>
-                                            ))}
+                                            {activityTypes.map((type: any, i: number) => <option key={i} value={type.name}>{type.name}</option>)}
                                         </select>
                                     </div>
-
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Schedule Date</label>
                                         <div className="relative">
                                             <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                                            <input
-                                                type="date"
-                                                required
-                                                className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3.5 pl-12 pr-4 text-sm font-bold text-slate-700 focus:bg-white transition-all outline-none"
-                                                value={newSchedule.scheduleDate}
-                                                onChange={(e) => setNewSchedule({ ...newSchedule, scheduleDate: e.target.value })}
-                                            />
+                                            <input type="date" required className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3.5 pl-12 pr-4 text-sm font-bold text-slate-700 focus:bg-white transition-all outline-none" value={newSchedule.scheduleDate} onChange={(e) => setNewSchedule({ ...newSchedule, scheduleDate: e.target.value })} />
                                         </div>
                                     </div>
                                 </div>
-
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Internal Comments</label>
-                                    <textarea
-                                        rows={3}
-                                        placeholder="Add any specific instructions for the visit..."
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm font-bold text-slate-700 focus:bg-white transition-all outline-none resize-none"
-                                        value={newSchedule.comment}
-                                        onChange={(e) => setNewSchedule({ ...newSchedule, comment: e.target.value })}
-                                    />
+                                    <textarea rows={3} placeholder="Add any specific instructions..." className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm font-bold text-slate-700 focus:bg-white transition-all outline-none resize-none" value={newSchedule.comment} onChange={(e) => setNewSchedule({ ...newSchedule, comment: e.target.value })} />
                                 </div>
+                                <button type="submit" className="w-full bg-primary-600 text-white py-4 rounded-2xl text-xs font-black uppercase tracking-[0.2em] shadow-xl shadow-primary-600/20 hover:shadow-primary-600/30 hover:scale-[1.01] active:scale-[0.98] transition-all">Confirm Schedule</button>
+                            </form>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
 
-                                <button
-                                    type="submit"
-                                    className="w-full bg-primary-600 text-white py-4 rounded-2xl text-xs font-black uppercase tracking-[0.2em] shadow-xl shadow-primary-600/20 hover:shadow-primary-600/30 hover:scale-[1.01] active:scale-[0.98] transition-all"
-                                >
-                                    Confirm Schedule
-                                </button>
+            <AnimatePresence>
+                {isEditModalOpen && editSchedule && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsEditModalOpen(false)} className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" />
+                        <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }} className="bg-white rounded-[2.5rem] w-full max-w-lg overflow-hidden shadow-2xl relative z-10 border border-slate-100">
+                            <div className="p-8 pb-4 flex items-center justify-between border-b border-slate-50">
+                                <div>
+                                    <h2 className="text-xl font-black text-slate-900">Edit Schedule</h2>
+                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest italic">ID: {editSchedule.scheduleId}</p>
+                                </div>
+                                <button onClick={() => setIsEditModalOpen(false)} className="p-2 hover:bg-slate-50 rounded-xl transition-colors"><X size={20} className="text-slate-400" /></button>
+                            </div>
+                            <form onSubmit={handleUpdateSchedule} className="p-8 space-y-6">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">ATM ID</label>
+                                    <input type="text" disabled className="w-full bg-slate-100 border border-slate-200 rounded-2xl py-3.5 px-4 text-sm font-bold text-slate-500 outline-none" value={editSchedule.atmId} />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Activity Type</label>
+                                        <select required className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3.5 px-4 text-sm font-bold text-slate-700 focus:bg-white transition-all outline-none appearance-none cursor-pointer" value={editSchedule.activityType} onChange={(e) => setEditSchedule({ ...editSchedule, activityType: e.target.value })}>
+                                            {activityTypes.map((type: any, i: number) => <option key={i} value={type.name}>{type.name}</option>)}
+                                        </select>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Schedule Date</label>
+                                        <input type="date" required className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3.5 px-4 text-sm font-bold text-slate-700 focus:bg-white transition-all outline-none" value={editSchedule.scheduleDate} onChange={(e) => setEditSchedule({ ...editSchedule, scheduleDate: e.target.value })} />
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Internal Comments</label>
+                                    <textarea rows={3} className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm font-bold text-slate-700 focus:bg-white transition-all outline-none resize-none" value={editSchedule.comment} onChange={(e) => setEditSchedule({ ...editSchedule, comment: e.target.value })} />
+                                </div>
+                                <button type="submit" className="w-full bg-primary-600 text-white py-4 rounded-2xl text-xs font-black uppercase tracking-[0.2em] shadow-xl shadow-primary-600/20 hover:shadow-primary-600/30 hover:scale-[1.01] active:scale-[0.98] transition-all">Update Schedule</button>
                             </form>
                         </motion.div>
                     </div>
