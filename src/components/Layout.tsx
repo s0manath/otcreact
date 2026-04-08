@@ -65,7 +65,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
                 <div className="flex-1 px-4 py-2 space-y-6">
                     <div>
-                        <p className="px-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 italic">Navigation</p>
+                        {/* <p className="px-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 italic">Navigation</p> */}
                         <div className="space-y-1">
                             <MenuLink icon={<LayoutDashboard size={18} />} label="Home Dashboard" path="/dashboard" />
                             <MenuLink icon={<TrendingUp size={18} />} label="Schedule Visit" path="/schedule" />
@@ -74,7 +74,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                     </div>
 
                     <div>
-                        <p className="px-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 italic">Reporting</p>
+                        {/* <p className="px-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 italic">Reporting</p> */}
                         <div className="space-y-1">
                             <button
                                 onClick={() => setIsReportsOpen(!isReportsOpen)}
@@ -111,7 +111,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                     </div>
 
                     <div>
-                        <p className="px-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 italic">Administration</p>
+                        {/* <p className="px-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 italic">Administration</p> */}
                         <div className="space-y-1">
                             <button
                                 onClick={() => setIsAdminOpen(!isAdminOpen)}
