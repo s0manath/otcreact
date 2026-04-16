@@ -176,7 +176,7 @@ const RouteConfigure: React.FC = () => {
       }
 
       const formattedData = data.map((item: any) => ({
-        "Schedule ID": item.id,
+        "Schedule ID": item.scheduleId,
         "ATM ID": item.atmId,
         "Activity Type": item.activityType,
         "Schedule Date": item.scheduleDate,
@@ -247,7 +247,7 @@ const RouteConfigure: React.FC = () => {
   const columns = [
     {
       header: "Schedule ID",
-      key: "id",
+      key: "scheduleId",
       render: (val: any, _row: any) => (
         <span className="font-bold text-slate-800 text-sm tracking-tight capitalize">
           {val}
@@ -340,7 +340,7 @@ const RouteConfigure: React.FC = () => {
   // Global filtering and Pagination logic
   const filteredData = routeData.filter((item) => {
     const searchStr =
-      `${item.id} ${item.atmId} ${item.activityType} ${item.scheduleDate} ${item.croType} {} ${item.routeKey} ${item.custodian1} ${item.custodian2}  ${item.districtName}`.toLowerCase();
+      `${item.scheduleId} ${item.atmId} ${item.activityType} ${item.scheduleDate} ${item.croType} {} ${item.routeKey} ${item.custodian1} ${item.custodian2}  ${item.districtName}`.toLowerCase();
     return searchStr.includes(globalSearch.toLowerCase());
   });
 
@@ -368,10 +368,10 @@ const RouteConfigure: React.FC = () => {
     alert(`Opening Preview for ATM: ${row.atmId} (Implemented for Production)`);
   };
 
-  //   const handleExport = () => {
-  //     //TODO:- export the list in excel format call the route/list api with the same filters and export the data in excel format
-  //     alert("Exporting data... (Implemented for Production)");
-  //   };
+  const handleEdit = (scheduleId: string, atmId: string) => {
+    setSelectedRoute({ scheduleId, atmId });
+    setIsEditModalOpen(true);
+  };
 
   return (
     <div className="space-y-6">
@@ -579,7 +579,7 @@ const RouteConfigure: React.FC = () => {
                           <CloudDownload size={16} />
                         </button>
                         <button
-                          onClick={() => handleEdit(row.id, row.atmId)}
+                          onClick={() => handleEdit(row.scheduleId, row.atmId)}
                           className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-all"
                           title="Configure"
                         >

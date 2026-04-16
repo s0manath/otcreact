@@ -13,6 +13,8 @@ import {
 } from 'lucide-react';
 import api from '../services/api';
 import ReportGrid from '../components/ReportGrid';
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 
 const REPORT_INFO: Record<string, { title: string, subtitle: string, icon: any }> = {
     'scheduled': { title: 'Scheduled Details Report', subtitle: 'Operations / Resource Planning', icon: Calendar },
@@ -42,10 +44,13 @@ const ReportPage: React.FC = () => {
     const [isFilterOpen, setIsFilterOpen] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(15);
+    const [totalRecords, setTotalRecords] = useState(0);
+
+    const totalPages = Math.ceil(totalRecords / itemsPerPage);
 
     useEffect(() => {
         fetchFranchises();
-        fetchData();
+        fetchData(1);
     }, [type]);
 
     const fetchFranchises = async () => {
@@ -57,7 +62,32 @@ const ReportPage: React.FC = () => {
         }
     };
 
-    const fetchData = async () => {
+    const fetchData = async (page: number = 1) => {
+        setLoading(true);
+        setCurrentPage(page);
+        try {
+            const res = await api.post('/report/data', {
+                reportType: reportKey,
+                fromDate,
+                toDate,
+                filterField,
+                filterValue,
+                franchiseCode,
+                username: 'admin',
+                pageNumber: page,
+                pageSize: itemsPerPage
+            });
+            setColumns(res.data.columns);
+            setData(res.data.data);
+            setTotalRecords(res.data.totalCount || 0);
+        } catch (err) {
+            console.error('Failed to fetch report data');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleExport = async () => {
         setLoading(true);
         try {
             const res = await api.post('/report/data', {
@@ -67,13 +97,28 @@ const ReportPage: React.FC = () => {
                 filterField,
                 filterValue,
                 franchiseCode,
-                username: 'admin'
+                username: 'admin',
+                pageNumber: 1,
+                pageSize: 100000 // Get all records for export
             });
-            setColumns(res.data.columns);
-            setData(res.data.data);
-            setCurrentPage(1); // Reset to first page on new fetch
+
+            const exportData = res.data.data;
+            if (!exportData || exportData.length === 0) {
+                alert("No data available to export.");
+                return;
+            }
+
+            const worksheet = XLSX.utils.json_to_sheet(exportData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Report");
+            const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+            const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
+
+            const fileName = `${reportKey}_report_${new Date().toISOString().split('T')[0]}.xlsx`;
+            saveAs(blob, fileName);
         } catch (err) {
-            console.error('Failed to fetch report data');
+            console.error('Failed to export report data');
+            alert("Failed to export report data.");
         } finally {
             setLoading(false);
         }
@@ -105,7 +150,11 @@ const ReportPage: React.FC = () => {
                         {isFilterOpen ? <ChevronUp size={14} className="ml-1 opacity-60" /> : <ChevronDown size={14} className="ml-1 opacity-60" />}
                     </button>
 
-                    <button className="flex items-center gap-2 px-4 py-2.5 bg-white text-slate-600 border border-slate-200 rounded-xl text-xs font-bold hover:border-slate-300 shadow-sm transition-all group">
+                    <button
+                        onClick={handleExport}
+                        disabled={loading || data.length === 0}
+                        className="flex items-center gap-2 px-4 py-2.5 bg-white text-slate-600 border border-slate-200 rounded-xl text-xs font-bold hover:border-slate-300 shadow-sm transition-all group disabled:opacity-50"
+                    >
                         <Download size={16} className="text-slate-400 group-hover:text-primary-500 transition-colors" />
                         Export Data
                     </button>
@@ -193,8 +242,8 @@ const ReportPage: React.FC = () => {
 
                             <div className="lg:col-span-5 flex justify-end">
                                 <button
-                                    onClick={fetchData}
-                                    className="bg-primary-600 text-white rounded-xl py-2.5 px-8 text-xs font-black shadow-lg shadow-primary-600/20 hover:scale-[1.02] active:scale-95 transition-all uppercase tracking-widest border border-primary-500/30 flex items-center gap-2"
+                                    onClick={() => fetchData(1)}
+                                    className="bg-primary-600 text-white rounded-xl py-2.5 px-8 text-xs font-black shadow-lg shadow-primary-600/30 hover:scale-[1.02] active:scale-95 transition-all uppercase tracking-widest border border-primary-500/30 flex items-center gap-2"
                                 >
                                     <RefreshCcw className="w-4 h-4" />
                                     Generate Report
@@ -206,24 +255,15 @@ const ReportPage: React.FC = () => {
             </AnimatePresence>
 
             <div className="px-8">
-                {(() => {
-                    const totalPages = Math.ceil(data.length / itemsPerPage);
-                    const paginatedData = data.slice(
-                        (currentPage - 1) * itemsPerPage,
-                        currentPage * itemsPerPage
-                    );
-                    return (
-                        <ReportGrid 
-                            columns={columns} 
-                            data={paginatedData} 
-                            isLoading={loading} 
-                            currentPage={currentPage}
-                            totalPages={totalPages}
-                            totalRecords={data.length}
-                            onPageChange={(page) => setCurrentPage(page)}
-                        />
-                    );
-                })()}
+                <ReportGrid
+                    columns={columns}
+                    data={data}
+                    isLoading={loading}
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    totalRecords={totalRecords}
+                    onPageChange={(page) => fetchData(page)}
+                />
             </div>
         </div>
     );

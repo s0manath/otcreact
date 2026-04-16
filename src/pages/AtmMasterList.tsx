@@ -40,7 +40,7 @@ const AtmMasterList: React.FC = () => {
     {
       header: "ATM ID",
       key: "atmId",
-      render: (val: string, row: ATMRow) => (
+      render: (val: string, row: AtmMaster) => (
         <div className="flex items-center gap-3">
           <Monitor size={16} className="text-blue-500" />
           <div>
