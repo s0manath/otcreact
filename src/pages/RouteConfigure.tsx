@@ -113,16 +113,16 @@ const RouteConfigure: React.FC = () => {
       const response = await api.post("/route/list", {
         fromDate: filters.dateFrom,
         toDate: filters.dateTo,
-        region: "",
-        district: "",
-        franchise: "",
-        zom: "",
-        activityType: "",
-        status: "",
-        chkConfig: "",
-        searchField: "None",
-        searchValue: "",
-        username: "Likhith",
+        region: filters.region,
+        district: filters.district,
+        franchise: filters.franchise,
+        zom: filters.zom,
+        activityType: filters.activityType,
+        status: filters.status,
+        chkConfig: filters.chkConfig,
+        searchField: filters.searchField,
+        searchValue: filters.searchValue,
+        username: "admin",
       });
       console.log("Fetched route data:", response.data);
       console.log("Applied filters:", decrypt(encrypt(filters)));
@@ -150,16 +150,16 @@ const RouteConfigure: React.FC = () => {
       const response = await api.post("/route/list", {
         fromDate: filters.dateFrom,
         toDate: filters.dateTo,
-        region: "",
-        district: "",
-        franchise: "",
-        zom: "",
-        activityType: "",
-        status: "",
-        chkConfig: "",
-        searchField: "None",
-        searchValue: "",
-        username: "Likhith",
+        region: filters.region,
+        district: filters.district,
+        franchise: filters.franchise,
+        zom: filters.zom,
+        activityType: filters.activityType,
+        status: filters.status,
+        chkConfig: filters.chkConfig,
+        searchField: filters.searchField,
+        searchValue: filters.searchValue,
+        username: "admin",
       });
 
       const data = response.data;
