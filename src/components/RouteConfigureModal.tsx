@@ -37,9 +37,10 @@ const RouteConfigureModal: React.FC<RouteConfigureModalProps> = ({ isOpen, onClo
             setCustodians(custResponse.data);
 
             if (detailsResponse.data) {
-                setRouteKey(detailsResponse.data.routeKey || '');
-                setCustodian1(detailsResponse.data.custodian1 || '');
-                setCustodian2(detailsResponse.data.custodian2 || '');
+                console.log('Fetched Route Details:', detailsResponse.data);
+                setRouteKey(detailsResponse.data.routeKey?.trim() || '');
+                setCustodian1(detailsResponse.data.custodian1?.trim() || '');
+                setCustodian2(detailsResponse.data.custodian2?.trim() || '');
             }
         } catch (error) {
             console.error('Error fetching modal data:', error);

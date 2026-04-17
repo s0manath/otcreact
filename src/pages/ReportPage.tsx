@@ -22,6 +22,9 @@ const REPORT_INFO: Record<string, { title: string, subtitle: string, icon: any }
     'otc-checkout': { title: 'OTC Checkout Report', subtitle: 'Operations / Compliance', icon: FileText },
     'otc-activity': { title: 'OTC Activity Detail Report', subtitle: 'Audit / Performance', icon: RefreshCcw },
     'audit': { title: 'Audit Logs Report', subtitle: 'Security / Traceability', icon: FileText },
+    'atm-detail': { title: 'ATM Detail Report', subtitle: 'Inventory / Asset Registry', icon: FileText },
+    'custodian-wise': { title: 'Custodian Wise Report', subtitle: 'Performance / Analytics', icon: RefreshCcw },
+    'otc-reset': { title: 'OTC Reset Report', subtitle: 'Security / Access Control', icon: RefreshCcw },
 };
 
 const ReportPage: React.FC = () => {
@@ -32,54 +35,28 @@ const ReportPage: React.FC = () => {
     // Filters
     const [fromDate, setFromDate] = useState(new Date().toISOString().split('T')[0]);
     const [toDate, setToDate] = useState(new Date().toISOString().split('T')[0]);
-    const [filterField, setFilterField] = useState('None');
-    const [filterValue, setFilterValue] = useState('');
-    const [franchiseCode, setFranchiseCode] = useState('');
-    const [franchises, setFranchises] = useState<any[]>([]);
 
     // Data
     const [columns, setColumns] = useState<string[]>([]);
     const [data, setData] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [isFilterOpen, setIsFilterOpen] = useState(true);
-    const [currentPage, setCurrentPage] = useState(1);
-    const [itemsPerPage] = useState(15);
-    const [totalRecords, setTotalRecords] = useState(0);
-
-    const totalPages = Math.ceil(totalRecords / itemsPerPage);
 
     useEffect(() => {
-        fetchFranchises();
-        fetchData(1);
+        fetchData();
     }, [type]);
 
-    const fetchFranchises = async () => {
-        try {
-            const res = await api.post('/report/franchises');
-            setFranchises(res.data);
-        } catch (err) {
-            console.error('Failed to fetch franchises');
-        }
-    };
-
-    const fetchData = async (page: number = 1) => {
+    const fetchData = async () => {
         setLoading(true);
-        setCurrentPage(page);
         try {
             const res = await api.post('/report/data', {
                 reportType: reportKey,
                 fromDate,
                 toDate,
-                filterField,
-                filterValue,
-                franchiseCode,
-                username: 'admin',
-                pageNumber: page,
-                pageSize: itemsPerPage
+                username: 'admin'
             });
             setColumns(res.data.columns);
             setData(res.data.data);
-            setTotalRecords(res.data.totalCount || 0);
         } catch (err) {
             console.error('Failed to fetch report data');
         } finally {
@@ -90,19 +67,7 @@ const ReportPage: React.FC = () => {
     const handleExport = async () => {
         setLoading(true);
         try {
-            const res = await api.post('/report/data', {
-                reportType: reportKey,
-                fromDate,
-                toDate,
-                filterField,
-                filterValue,
-                franchiseCode,
-                username: 'admin',
-                pageNumber: 1,
-                pageSize: 100000 // Get all records for export
-            });
-
-            const exportData = res.data.data;
+            const exportData = data;
             if (!exportData || exportData.length === 0) {
                 alert("No data available to export.");
                 return;
@@ -170,7 +135,7 @@ const ReportPage: React.FC = () => {
                         exit={{ height: 0, opacity: 0 }}
                         className="px-8 overflow-hidden"
                     >
-                        <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-slate-200 grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 gap-6 items-end">
+                        <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-slate-200 grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Date From</label>
                                 <div className="relative">
@@ -197,52 +162,9 @@ const ReportPage: React.FC = () => {
                                 </div>
                             </div>
 
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Franchise</label>
-                                <select
-                                    value={franchiseCode}
-                                    onChange={(e) => setFranchiseCode(e.target.value)}
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-4 text-xs font-bold text-slate-700 focus:bg-white transition-all outline-none appearance-none cursor-pointer"
-                                >
-                                    <option value="">All Franchises</option>
-                                    {franchises.map(f => (
-                                        <option key={f.code} value={f.code}>{f.name}</option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Search Field</label>
-                                <select
-                                    value={filterField}
-                                    onChange={(e) => setFilterField(e.target.value)}
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-4 text-xs font-bold text-slate-700 focus:bg-white transition-all outline-none appearance-none cursor-pointer"
-                                >
-                                    <option value="None">None</option>
-                                    <option value="ATM_Schedule.ATMID">ATM ID</option>
-                                    <option value="ATM_Schedule.Activity_Type">Activity Type</option>
-                                </select>
-                            </div>
-
-                            <div className="flex flex-col space-y-2">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Filter Value</label>
-                                <div className="flex gap-2">
-                                    <div className="relative flex-1">
-                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
-                                        <input
-                                            type="text"
-                                            placeholder="Type key..."
-                                            value={filterValue}
-                                            onChange={(e) => setFilterValue(e.target.value)}
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 pl-10 pr-4 text-xs font-bold text-slate-700 focus:bg-white outline-none transition-all"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="lg:col-span-5 flex justify-end">
+                            <div className="flex justify-end">
                                 <button
-                                    onClick={() => fetchData(1)}
+                                    onClick={() => fetchData()}
                                     className="bg-primary-600 text-white rounded-xl py-2.5 px-8 text-xs font-black shadow-lg shadow-primary-600/30 hover:scale-[1.02] active:scale-95 transition-all uppercase tracking-widest border border-primary-500/30 flex items-center gap-2"
                                 >
                                     <RefreshCcw className="w-4 h-4" />
@@ -259,10 +181,6 @@ const ReportPage: React.FC = () => {
                     columns={columns}
                     data={data}
                     isLoading={loading}
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    totalRecords={totalRecords}
-                    onPageChange={(page) => fetchData(page)}
                 />
             </div>
         </div>

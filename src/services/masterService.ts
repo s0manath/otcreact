@@ -157,83 +157,34 @@ const masterService = {
         return response.data;
     },
 
-    // Regional Hierarchy
-    getStatesList: async (params?: any) => {
-        const response = await api.post<StateMaster[]>('/regionalmaster/states/search', params);
+    // State & District Management
+    getStatesAll: async (name?: string) => {
+        const response = await api.get<StateMaster[]>('/master/states/all', { params: { name } });
         return response.data;
     },
     getState: async (id: number) => {
-        const response = await api.post<StateMaster>('/regionalmaster/states/detail', { id });
+        const response = await api.get<StateMaster>(`/master/states/${id}`);
         return response.data;
     },
     saveState: async (data: StateMaster) => {
-        const response = await api.post('/regionalmaster/states/save', data);
+        const response = await api.post('/master/states', data);
         return response.data;
     },
 
-    getDistrictsList: async (params?: any) => {
-        const response = await api.post<DistrictMaster[]>('/regionalmaster/districts/search', params);
+    getDistrictsAll: async (name?: string, stateId?: number) => {
+        const response = await api.get<DistrictMaster[]>('/master/districts/all', { params: { name, stateId } });
         return response.data;
     },
     getDistrict: async (id: number) => {
-        const response = await api.post<DistrictMaster>('/regionalmaster/districts/detail', { id });
+        const response = await api.get<DistrictMaster>(`/master/districts/${id}`);
         return response.data;
     },
     saveDistrict: async (data: DistrictMaster) => {
-        const response = await api.post('/regionalmaster/districts/save', data);
+        const response = await api.post('/master/districts', data);
         return response.data;
     },
 
-    getZomsList: async (params?: any) => {
-        const response = await api.post<ZomMaster[]>('/regionalmaster/zoms/search', params);
-        return response.data;
-    },
-    getZom: async (id: number) => {
-        const response = await api.post<ZomMaster>('/regionalmaster/zoms/detail', { id });
-        return response.data;
-    },
-    saveZom: async (data: ZomMaster) => {
-        const response = await api.post('/regionalmaster/zoms/save', data);
-        return response.data;
-    },
-
-    // Bulk Utilities
-    uploadAtmBulk: async (fileName: string, fileContent: string) => {
-        const response = await api.post<BulkUploadResponse>('/bulkupload/atm', { fileName, fileContent });
-        return response.data;
-    },
-    updateRouteKeyBulk: async (fileName: string, fileContent: string) => {
-        const response = await api.post<BulkUploadResponse>('/bulkupload/route-key', { fileName, fileContent });
-        return response.data;
-    },
-
-    // Custodians
-    getCustodians: async (params?: any) => {
-        const response = await api.post<CustodianMaster[]>('/master/custodians-list', params || {});
-        return response.data;
-    },
-    getCustodian: async (id: number) => {
-        const response = await api.post<CustodianMaster>('/master/custodians-detail', { id });
-        return response.data;
-    },
-    saveCustodian: async (data: CustodianMaster) => {
-        const response = await api.post('/master/custodians', data);
-        return response.data;
-    },
-
-    // Franchises
-    getFranchises: async (params?: any) => {
-        const response = await api.post<FranchiseMaster[]>('/master/franchises-list', params || {});
-        return response.data;
-    },
-    getFranchise: async (id: number) => {
-        const response = await api.post<FranchiseMaster>('/master/franchises-detail', { id });
-        return response.data;
-    },
-    saveFranchise: async (data: FranchiseMaster) => {
-        const response = await api.post('/master/franchises', data);
-        return response.data;
-    },
+    getRegions: async () => (await api.get<MasterDropdownItem[]>('/master/dropdowns/regions')).data,
 
     // ATMs
     getAtms: async () => {
@@ -256,6 +207,7 @@ const masterService = {
     getRouteKeys: async () => (await api.post<MasterDropdownItem[]>('/master/dropdowns/routekeys')).data,
     getStates: async () => (await api.post<MasterDropdownItem[]>('/master/dropdowns/states')).data,
     getDistricts: async (stateId: number) => (await api.post<MasterDropdownItem[]>('/master/dropdowns/districts', { id: stateId })).data,
+    getCustodiansDropdown: async () => (await api.post<MasterDropdownItem[]>('/master/dropdowns/custodians')).data,
     getCroTypes: async () => [
         { id: 'India1', name: 'India1' },
         { id: 'Alternate', name: 'Alternate' },

@@ -16,7 +16,7 @@ const DistrictMasterList: React.FC = () => {
     const fetchDistricts = async () => {
         try {
             setLoading(true);
-            const data = await masterService.getDistrictsList({});
+            const data = await masterService.getDistrictsAll();
             setDistricts(data);
         } catch (error) {
             console.error('Error fetching districts:', error);

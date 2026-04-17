@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Database, Loader2 } from 'lucide-react';
 
@@ -6,13 +6,17 @@ interface ReportGridProps {
     columns: string[];
     data: any[];
     isLoading: boolean;
-    currentPage: number;
-    totalPages: number;
-    onPageChange: (page: number) => void;
-    totalRecords: number;
 }
 
-const ReportGrid: React.FC<ReportGridProps> = ({ columns, data, isLoading, currentPage, totalPages, onPageChange, totalRecords }) => {
+const ReportGrid: React.FC<ReportGridProps> = ({ columns, data, isLoading }) => {
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 15;
+
+    // Reset page when data changes
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [data]);
+
     if (isLoading) {
         return (
             <div className="flex flex-col items-center justify-center py-24 bg-white rounded-[2.5rem] border border-slate-200 shadow-sm">
@@ -32,6 +36,10 @@ const ReportGrid: React.FC<ReportGridProps> = ({ columns, data, isLoading, curre
         );
     }
 
+    const totalRecords = data.length;
+    const totalPages = Math.ceil(totalRecords / itemsPerPage);
+    const pagedData = data.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -50,7 +58,7 @@ const ReportGrid: React.FC<ReportGridProps> = ({ columns, data, isLoading, curre
                         </tr>
                     </thead>
                     <tbody>
-                        {data.map((row, idx) => (
+                        {pagedData.map((row, idx) => (
                             <tr
                                 key={idx}
                                 className="group hover:bg-slate-50/50 transition-all border-b border-slate-50 last:border-none"
@@ -81,14 +89,14 @@ const ReportGrid: React.FC<ReportGridProps> = ({ columns, data, isLoading, curre
 
                 <div className="flex items-center gap-1">
                     <button 
-                        onClick={() => onPageChange(1)}
+                        onClick={() => setCurrentPage(1)}
                         disabled={currentPage === 1}
                         className="px-4 py-2 rounded-xl text-[10px] font-black uppercase text-slate-400 hover:text-slate-900 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                     >
                         First
                     </button>
                     <button 
-                        onClick={() => onPageChange(currentPage - 1)}
+                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                         disabled={currentPage === 1}
                         className="px-4 py-2 rounded-xl text-[10px] font-black uppercase text-slate-400 hover:text-slate-900 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                     >
@@ -99,14 +107,14 @@ const ReportGrid: React.FC<ReportGridProps> = ({ columns, data, isLoading, curre
                         <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">of {totalPages || 1}</span>
                     </div>
                     <button 
-                        onClick={() => onPageChange(currentPage + 1)}
+                        onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                         disabled={currentPage === totalPages || totalPages === 0}
                         className="px-4 py-2 rounded-xl text-[10px] font-black uppercase text-slate-900 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                     >
                         Next
                     </button>
                     <button 
-                        onClick={() => onPageChange(totalPages)}
+                        onClick={() => setCurrentPage(totalPages)}
                         disabled={currentPage === totalPages || totalPages === 0}
                         className="px-4 py-2 rounded-xl text-[10px] font-black uppercase text-slate-900 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                     >

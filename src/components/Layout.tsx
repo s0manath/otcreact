@@ -99,11 +99,10 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                                         <SubMenuLink label="Route Details" path="/reports/route-details" />
                                         <SubMenuLink label="OTC Checkout" path="/reports/otc-checkout" />
                                         <SubMenuLink label="OTC Activity" path="/reports/otc-activity" />
-                                        <SubMenuLink label="OTC Dashboard" path="/reports/otc-dashboard" />
-                                        <SubMenuLink label="ATM Details" path="/reports/atm-details" />
-                                        <SubMenuLink label="Bulk Attachments" path="/reports/bulk-attachments" />
+                                        <SubMenuLink label="OTC Reset" path="/reports/otc-reset" />
+                                        <SubMenuLink label="ATM Detail" path="/reports/atm-detail" />
+                                        <SubMenuLink label="Custodian Wise" path="/reports/custodian-wise" />
                                         <SubMenuLink label="Audit Report" path="/reports/audit" />
-                                        <SubMenuLink label="Custodian Status" path="/reports/custodian-status" />
                                     </motion.div>
                                 )}
                             </AnimatePresence>

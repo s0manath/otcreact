@@ -65,6 +65,7 @@ const AtmMasterForm: React.FC = () => {
     const [routeKeys, setRouteKeys] = useState<MasterDropdownItem[]>([]);
     const [croTypes, setCroTypes] = useState<MasterDropdownItem[]>([]);
     const [states, setStates] = useState<MasterDropdownItem[]>([]);
+    const [custodians, setCustodians] = useState<MasterDropdownItem[]>([]);
     const [loading, setLoading] = useState(false);
     const [saveLoading, setSaveLoading] = useState(false);
     const [activeTab, setActiveTab] = useState<'site' | 'hardware' | 'mapping'>('site');
@@ -78,13 +79,14 @@ const AtmMasterForm: React.FC = () => {
 
     const loadDropdowns = async () => {
         try {
-            const [locData, zomData, franData, routeKeyData, stateData, croData] = await Promise.all([
+            const [locData, zomData, franData, routeKeyData, stateData, croData, custData] = await Promise.all([
                 masterService.getLocations(),
                 masterService.getZoms(),
                 masterService.getFranchisesDropdown(),
                 masterService.getRouteKeys(),
                 masterService.getStates(),
-                masterService.getCroTypes()
+                masterService.getCroTypes(),
+                masterService.getCustodiansDropdown()
             ]);
             setLocations(locData);
             setZoms(zomData);
@@ -92,6 +94,7 @@ const AtmMasterForm: React.FC = () => {
             setRouteKeys(routeKeyData);
             setStates(stateData);
             setCroTypes(croData);
+            setCustodians(custData);
         } catch (error) {
             console.error('Error loading dropdowns:', error);
         }
@@ -623,6 +626,47 @@ const AtmMasterForm: React.FC = () => {
                                                         </select>
                                                         <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
                                                             <ChevronRight size={14} className="rotate-90" />
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="space-y-4 pt-4 border-t border-slate-100/50">
+                                                    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Custodian Personnel Assignments</h4>
+                                                    <div className="grid grid-cols-1 gap-4">
+                                                        <div className="space-y-1">
+                                                            <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Primary Custodian (C1)</label>
+                                                            <select
+                                                                value={form.custodian1}
+                                                                onChange={e => setForm({ ...form, custodian1: e.target.value })}
+                                                                className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-xs font-bold text-slate-700 appearance-none focus:ring-4 focus:ring-blue-500/5 transition-all"
+                                                            >
+                                                                <option value="">Choose Custodian</option>
+                                                                {custodians.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                                            </select>
+                                                        </div>
+                                                        <div className="grid grid-cols-2 gap-4">
+                                                            <div className="space-y-1">
+                                                                <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Secondary (C2)</label>
+                                                                <select
+                                                                    value={form.custodian2}
+                                                                    onChange={e => setForm({ ...form, custodian2: e.target.value })}
+                                                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-xs font-bold text-slate-700 appearance-none transition-all"
+                                                                >
+                                                                    <option value="">Choose...</option>
+                                                                    {custodians.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                                                </select>
+                                                            </div>
+                                                            <div className="space-y-1">
+                                                                <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-1">Tertiary (C3)</label>
+                                                                <select
+                                                                    value={form.custodian3}
+                                                                    onChange={e => setForm({ ...form, custodian3: e.target.value })}
+                                                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-xs font-bold text-slate-700 appearance-none transition-all"
+                                                                >
+                                                                    <option value="">Choose...</option>
+                                                                    {custodians.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                                                </select>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>

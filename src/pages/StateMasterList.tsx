@@ -16,7 +16,7 @@ const StateMasterList: React.FC = () => {
     const fetchStates = async () => {
         try {
             setLoading(true);
-            const data = await masterService.getStatesList({});
+            const data = await masterService.getStatesAll();
             setStates(data);
         } catch (error) {
             console.error('Error fetching states:', error);

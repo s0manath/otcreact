@@ -27,7 +27,7 @@ const StateMasterForm: React.FC = () => {
     const loadData = async () => {
         try {
             setLoading(true);
-            const regionData = await masterService.getLocations(); // Assuming regions are here for now
+            const regionData = await masterService.getRegions();
             setRegions(regionData);
 
             if (isEdit) {
@@ -99,8 +99,8 @@ const StateMasterForm: React.FC = () => {
                             <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Parent Region</label>
                             <div className="relative">
                                 <select
-                                    value={form.regionId || ''}
-                                    onChange={e => setForm({ ...form, regionId: parseInt(e.target.value) })}
+                                    value={form.regionCode || ''}
+                                    onChange={e => setForm({ ...form, regionCode: e.target.value })}
                                     className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-4 px-6 text-sm font-bold text-slate-800 focus:outline-none focus:ring-4 focus:ring-orange-500/5 focus:border-orange-400 transition-all appearance-none"
                                 >
                                     <option value="">Select Region</option>
