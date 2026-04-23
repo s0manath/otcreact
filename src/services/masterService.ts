@@ -141,8 +141,8 @@ export interface MasterDropdownItem {
 
 const masterService = {
   // Roles
-  getRoles: async (params?: any) => {
-    const response = await api.post<RoleMaster[]>("/rolemaster/search", params);
+  getRoles: async () => {
+    const response = await api.get<RoleMaster[]>("/rolemaster");
     return response.data;
   },
   getRole: async (id: number) => {

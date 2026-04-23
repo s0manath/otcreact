@@ -16,7 +16,7 @@ const RoleMasterList: React.FC = () => {
     const fetchRoles = async () => {
         try {
             setLoading(true);
-            const data = await masterService.getRoles({});
+            const data = await masterService.getRoles();
             setRoles(data);
         } catch (error) {
             console.error('Error fetching roles:', error);
@@ -44,26 +44,12 @@ const RoleMasterList: React.FC = () => {
             )
         },
         {
-            header: 'Permissions',
-            key: 'privileges',
+            header: 'Description',
+            key: 'roleDescription',
             render: (val: any) => (
-                <div className="flex items-center gap-1.5">
-                    <div className="flex -space-x-1.5">
-                        {(val || []).slice(0, 3).map((p: any, i: number) => (
-                            <div key={i} className="w-6 h-6 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center text-[10px] font-black text-slate-600">
-                                {p.moduleName.charAt(0)}
-                            </div>
-                        ))}
-                        {(val || []).length > 3 && (
-                            <div className="w-6 h-6 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center text-[10px] font-black text-white">
-                                +{(val || []).length - 3}
-                            </div>
-                        )}
-                    </div>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-2">
-                        Modules Managed
-                    </span>
-                </div>
+                <span className="text-xs font-medium text-slate-500 line-clamp-1">
+                    {val || 'System Role'}
+                </span>
             )
         },
         {
