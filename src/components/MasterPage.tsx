@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Search, Filter, Download, MoreVertical, Edit2, Trash2 } from 'lucide-react';
 
@@ -13,7 +14,40 @@ interface MasterPageProps {
     extraActions?: React.ReactNode;
 }
 
-const MasterPage: React.FC<MasterPageProps> = ({ title, subtitle, data, columns, onAdd, onEdit, onDelete, loading, extraActions }) => {
+const PAGE_SIZE = 10;
+
+const MasterPage: React.FC<MasterPageProps> = ({
+    title,
+    subtitle,
+    data,
+    columns,
+    onAdd,
+    onEdit,
+    onDelete,
+    loading,
+    extraActions
+}) => {
+
+    /* ======================
+       PAGINATION (ONLY ADDITION)
+    ====================== */
+    const [currentPage, setCurrentPage] = useState(1);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [data]);
+
+    const totalRecords = data.length;
+    const totalPages = Math.ceil(totalRecords / PAGE_SIZE);
+
+    const paginatedData = data.slice(
+        (currentPage - 1) * PAGE_SIZE,
+        currentPage * PAGE_SIZE
+    );
+
+    /* ======================
+       ORIGINAL CODE BELOW
+    ====================== */
     return (
         <div className="p-8">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
@@ -73,7 +107,7 @@ const MasterPage: React.FC<MasterPageProps> = ({ title, subtitle, data, columns,
                         </thead>
                         <tbody className="divide-y divide-slate-100">
                             {loading ? (
-                                Array.from({ length: 5 }).map((_, i) => (
+                                Array.from({ length: PAGE_SIZE }).map((_, i) => (
                                     <tr key={i} className="animate-pulse">
                                         {columns.map((_, j) => (
                                             <td key={j} className="py-8 px-6">
@@ -85,30 +119,34 @@ const MasterPage: React.FC<MasterPageProps> = ({ title, subtitle, data, columns,
                                         </td>
                                     </tr>
                                 ))
-                            ) : data.length === 0 ? (
+                            ) : paginatedData.length === 0 ? (
                                 <tr>
                                     <td colSpan={columns.length + 1} className="py-20 text-center">
                                         <div className="flex flex-col items-center gap-3">
                                             <div className="w-16 h-16 rounded-3xl bg-slate-50 flex items-center justify-center text-slate-200">
                                                 <Search size={32} />
                                             </div>
-                                            <p className="text-xs font-black uppercase tracking-widest text-slate-300">No matching records found</p>
+                                            <p className="text-xs font-black uppercase tracking-widest text-slate-300">
+                                                No matching records found
+                                            </p>
                                         </div>
                                     </td>
                                 </tr>
                             ) : (
                                 <AnimatePresence mode="popLayout">
-                                    {data.map((row, idx) => (
+                                    {paginatedData.map((row, idx) => (
                                         <motion.tr
+                                            key={idx}
                                             initial={{ opacity: 0, y: 10 }}
                                             animate={{ opacity: 1, y: 0 }}
-                                            transition={{ delay: idx * 0.05 }}
-                                            key={idx}
+                                            transition={{ delay: idx * 0.03 }}
                                             className="hover:bg-slate-50/50 transition-colors group"
                                         >
                                             {columns.map((col, i) => (
                                                 <td key={i} className="py-4 px-6 text-sm">
-                                                    {col.render ? col.render(row[col.key], row) : <span className="font-semibold text-slate-700">{row[col.key]}</span>}
+                                                    {col.render
+                                                        ? col.render(row[col.key], row)
+                                                        : <span className="font-semibold text-slate-700">{row[col.key]}</span>}
                                                 </td>
                                             ))}
                                             <td className="py-4 px-6 text-right">
@@ -142,12 +180,29 @@ const MasterPage: React.FC<MasterPageProps> = ({ title, subtitle, data, columns,
                     </table>
                 </div>
 
+                {/* PAGINATION FOOTER (ONLY CHANGE) */}
                 <div className="p-6 border-t border-slate-50 flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-widest">
-                    <span>Showing {data.length} entries</span>
+                    <span>
+                        Showing {paginatedData.length} of {totalRecords} entries
+                    </span>
                     <div className="flex items-center gap-2">
-                        <button className="px-3 py-1 bg-slate-50 rounded-lg border border-slate-200 opacity-50 cursor-not-allowed">Prev</button>
-                        <button className="px-3 py-1 bg-primary-50 text-primary-600 rounded-lg border border-primary-100">1</button>
-                        <button className="px-3 py-1 bg-slate-50 rounded-lg border border-slate-200 hover:bg-slate-100 transition-all">Next</button>
+                        <button
+                            disabled={currentPage === 1}
+                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                            className="px-3 py-1 bg-slate-50 rounded-lg border border-slate-200 disabled:opacity-40"
+                        >
+                            Prev
+                        </button>
+                        <span className="px-3 py-1 bg-primary-50 text-primary-600 rounded-lg border border-primary-100">
+                            {currentPage}
+                        </span>
+                        <button
+                            disabled={currentPage === totalPages || totalPages === 0}
+                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                            className="px-3 py-1 bg-slate-50 rounded-lg border border-slate-200 disabled:opacity-40"
+                        >
+                            Next
+                        </button>
                     </div>
                 </div>
             </div>

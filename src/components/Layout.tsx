@@ -95,14 +95,15 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                                         exit={{ height: 0, opacity: 0 }}
                                         className="overflow-hidden"
                                     >
-                                        <SubMenuLink label="Scheduled Details" path="/reports/scheduled" />
-                                        <SubMenuLink label="Route Details" path="/reports/route-details" />
-                                        <SubMenuLink label="OTC Checkout" path="/reports/otc-checkout" />
-                                        <SubMenuLink label="OTC Activity" path="/reports/otc-activity" />
-                                        <SubMenuLink label="OTC Reset" path="/reports/otc-reset" />
-                                        <SubMenuLink label="ATM Detail" path="/reports/atm-detail" />
-                                        <SubMenuLink label="Custodian Wise" path="/reports/custodian-wise" />
+                                        <SubMenuLink label="ATM Detail Report" path="/reports/atm-detail" />
+                                        <SubMenuLink label="Scheduled Details Report" path="/reports/scheduled" />
+                                        <SubMenuLink label="Route Details Report" path="/reports/route-details" />
+                                        <SubMenuLink label="OTC Checkout Report" path="/reports/otc-checkout" />
+                                        <SubMenuLink label="OTC Activity Report" path="/reports/otc-activity" />
+                                        <SubMenuLink label="Custodian Wise Report" path="/reports/custodian-wise" />
                                         <SubMenuLink label="Audit Report" path="/reports/audit" />
+                                        <SubMenuLink label="OTC Reset Report" path="/reports/otc-reset" />
+
                                     </motion.div>
                                 )}
                             </AnimatePresence>

@@ -15,6 +15,7 @@ import api from '../services/api';
 import ReportGrid from '../components/ReportGrid';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
+import JSZip from "jszip";
 
 const REPORT_INFO: Record<string, { title: string, subtitle: string, icon: any }> = {
     'scheduled': { title: 'Scheduled Details Report', subtitle: 'Operations / Resource Planning', icon: Calendar },
@@ -64,30 +65,97 @@ const ReportPage: React.FC = () => {
         }
     };
 
-    const handleExport = async () => {
-        setLoading(true);
-        try {
-            const exportData = data;
-            if (!exportData || exportData.length === 0) {
-                alert("No data available to export.");
-                return;
-            }
+   
+const handleExport = async () => {
+  setLoading(true);
 
-            const worksheet = XLSX.utils.json_to_sheet(exportData);
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Report");
-            const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-            const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
+  try {
+    if (!data || data.length === 0) {
+      alert("No data available to export.");
+      return;
+    }
 
-            const fileName = `${reportKey}_report_${new Date().toISOString().split('T')[0]}.xlsx`;
-            saveAs(blob, fileName);
-        } catch (err) {
-            console.error('Failed to export report data');
-            alert("Failed to export report data.");
-        } finally {
-            setLoading(false);
+    const totalRows = data.length;
+    const today = new Date().toISOString().split("T")[0];
+
+    /* =========================
+       < 50K → SINGLE XLSX
+    ========================= */
+    if (totalRows < 50000) {
+      const ws = XLSX.utils.json_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Report");
+
+      const buffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+      saveAs(new Blob([buffer]), `${reportKey}_${today}.xlsx`);
+      return;
+    }
+
+    /* =========================
+       50K–200K → MULTI-SHEET XLSX
+    ========================= */
+    if (totalRows <= 200000) {
+      const wb = XLSX.utils.book_new();
+      const CHUNK = 50000;
+
+      for (let i = 0; i < totalRows; i += CHUNK) {
+        const ws = XLSX.utils.json_to_sheet(data.slice(i, i + CHUNK));
+        XLSX.utils.book_append_sheet(wb, ws, `Sheet_${i / CHUNK + 1}`);
+      }
+
+      const buffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+      saveAs(new Blob([buffer]), `${reportKey}_${today}.xlsx`);
+      return;
+    }
+
+    /* =========================
+       200K–500K → CSV ZIP ✅
+    ========================= */
+    if (totalRows <= 800000) {
+      const zip = new JSZip();
+      const headers = Object.keys(data[0]);
+      const ROWS_PER_FILE = 100000;
+
+      const escape = (v) =>
+        `"${String(v ?? "").replace(/"/g, '""')}"`;
+
+      for (let i = 0; i < totalRows; i += ROWS_PER_FILE) {
+        let csv = headers.join(",") + "\n";
+        const chunk = data.slice(i, i + ROWS_PER_FILE);
+
+        for (let row of chunk) {
+          csv += headers.map(h => escape(row[h])).join(",") + "\n";
         }
-    };
+
+        zip.file(
+          `${reportKey}_part_${i / ROWS_PER_FILE + 1}.csv`,
+          csv
+        );
+
+        // Prevent browser freeze
+        await new Promise(res => setTimeout(res, 0));
+      }
+
+      const zipBlob = await zip.generateAsync({ type: "blob" });
+      saveAs(zipBlob, `${reportKey}_${today}_CSV.zip`);
+      return;
+    }
+
+    /* =========================
+       > 500K → BLOCK
+    ========================= */
+    alert(
+      `Total Records: ${totalRows}. Please use backend export.`
+    );
+
+  } catch (err) {
+    console.error(err);
+    alert(`Failed to export report data. Total Records: ${data.length}`);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
     return (
         <div className="space-y-6 pb-12 font-sans">

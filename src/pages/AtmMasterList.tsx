@@ -126,7 +126,7 @@ const AtmMasterList: React.FC = () => {
 
     {
       header: "Franchise Name",
-      key: "franchiseName",
+      key: "franchise",
       render: (val: string) => (
         <div className="text-sm font-semibold text-slate-700">
           {val || "N/A"}
@@ -136,7 +136,7 @@ const AtmMasterList: React.FC = () => {
 
     {
       header: "ZOM Name",
-      key: "zomName",
+      key: "zom",
       render: (val: string) => (
         <div className="text-sm text-slate-600">{val || "N/A"}</div>
       ),

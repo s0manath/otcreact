@@ -51,28 +51,26 @@ const ReportGrid: React.FC<ReportGridProps> = ({ columns, data, isLoading }) => 
                     <thead>
                         <tr className="border-b border-slate-100 bg-slate-50/30 sticky top-0 z-10 backdrop-blur-sm">
                             {columns.map((col) => (
-                                <th key={col} className="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.15em]">
-                                    {col}
-                                </th>
+                               <th key={col}className="px-8 py-6 text-[13px] font-black text-slate-400 uppercase tracking-[0.15em] whitespace-nowrap">{col}</th>
                             ))}
                         </tr>
                     </thead>
                     <tbody>
-                        {pagedData.map((row, idx) => (
-                            <tr
-                                key={idx}
-                                className="group hover:bg-slate-50/50 transition-all border-b border-slate-50 last:border-none"
-                            >
-                                {columns.map((col) => (
-                                    <td key={`${idx}-${col}`} className="px-8 py-5">
-                                        <span className="text-sm font-bold text-slate-700">
-                                            {row[col]?.toString() || '-'}
-                                        </span>
-                                    </td>
-                                ))}
-                            </tr>
-                        ))}
-                    </tbody>
+  {pagedData.map((row, idx) => (
+    <tr
+      key={idx}
+      className="group hover:bg-slate-50/50 transition-all border-b border-slate-50 last:border-none"
+    >
+      {columns.map((col) => (
+        <td key={`${idx}-${col}`} className="px-8 py-5">
+          <span className="text-sm font-bold text-slate-700 whitespace-nowrap">
+            {row[col]?.toString() || '-'}
+          </span>
+        </td>
+      ))}
+    </tr>
+  ))}
+</tbody>
                 </table>
             </div>
 

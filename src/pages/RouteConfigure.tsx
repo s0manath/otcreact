@@ -247,7 +247,7 @@ const RouteConfigure: React.FC = () => {
   const columns = [
     {
       header: "Schedule ID",
-      key: "id",
+      key: "scheduleId",
       render: (val: any, _row: any) => (
         <span className="font-bold text-slate-800 text-sm tracking-tight capitalize">
           {val}
