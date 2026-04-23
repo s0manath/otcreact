@@ -42,6 +42,7 @@ const ReportPage: React.FC = () => {
     const [data, setData] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [isFilterOpen, setIsFilterOpen] = useState(true);
+    const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
         fetchData();
@@ -203,7 +204,7 @@ const handleExport = async () => {
                         exit={{ height: 0, opacity: 0 }}
                         className="px-8 overflow-hidden"
                     >
-                        <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-slate-200 grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+                        <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-slate-200 grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Date From</label>
                                 <div className="relative">
@@ -230,13 +231,27 @@ const handleExport = async () => {
                                 </div>
                             </div>
 
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Quick Search</label>
+                                <div className="relative">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                                    <input
+                                        type="text"
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        placeholder="Search in results..."
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 pl-10 pr-4 text-xs font-bold text-slate-700 focus:bg-white focus:ring-4 focus:ring-primary-500/5 transition-all outline-none"
+                                    />
+                                </div>
+                            </div>
+
                             <div className="flex justify-end">
                                 <button
                                     onClick={() => fetchData()}
-                                    className="bg-primary-600 text-white rounded-xl py-2.5 px-8 text-xs font-black shadow-lg shadow-primary-600/30 hover:scale-[1.02] active:scale-95 transition-all uppercase tracking-widest border border-primary-500/30 flex items-center gap-2"
+                                    className="w-full bg-primary-600 text-white rounded-xl py-2.5 px-8 text-xs font-black shadow-lg shadow-primary-600/30 hover:scale-[1.02] active:scale-95 transition-all uppercase tracking-widest border border-primary-500/30 flex items-center justify-center gap-2"
                                 >
                                     <RefreshCcw className="w-4 h-4" />
-                                    Generate Report
+                                    Generate
                                 </button>
                             </div>
                         </div>
@@ -247,7 +262,11 @@ const handleExport = async () => {
             <div className="px-8">
                 <ReportGrid
                     columns={columns}
-                    data={data}
+                    data={data.filter(row => 
+                        Object.values(row).some(val => 
+                            String(val || '').toLowerCase().includes(searchTerm.toLowerCase())
+                        )
+                    )}
                     isLoading={loading}
                 />
             </div>
