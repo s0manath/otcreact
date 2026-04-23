@@ -54,7 +54,16 @@ const RoleMasterForm: React.FC = () => {
             const moduleList = await masterService.getModuleList();
 
             if (isEdit) {
-                const data = await masterService.getRole(parseInt(id!));
+                const rawData = await masterService.getRole(parseInt(id!)) as any;
+                const data: RoleMaster = {
+                    slNo: rawData.slNo || rawData.SlNo || 0,
+                    roleName: rawData.roleName || rawData.RoleName || '',
+                    roleDescription: rawData.roleDescription || rawData.RoleDescription || '',
+                    roleStatus: rawData.roleStatus ?? rawData.RoleStatus ?? 1,
+                    coustodianNoneAvailable: rawData.coustodianNoneAvailable ?? rawData.CoustodianNoneAvailable ?? 0,
+                    privileges: rawData.privileges || rawData.Privileges || [],
+                    reportPrivileges: rawData.reportPrivileges || rawData.ReportPrivileges || []
+                };
                 setForm(data);
             } else {
                 // Initialize privileges with default false for all modules
