@@ -68,9 +68,29 @@ const ReportPage: React.FC = () => {
 
    
 const handleExport = async () => {
+  const start = new Date(fromDate);
+  const end = new Date(toDate);
+  const diffTime = Math.abs(end.getTime() - start.getTime());
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
   setLoading(true);
 
   try {
+    // POLICY: If range > 5 days, use Backend Streamed Zip
+    if (diffDays > 5) {
+      const response = await api.post('/report/export-zip', {
+        reportType: reportKey,
+        fromDate,
+        toDate,
+        username: 'admin'
+      }, { responseType: 'blob' });
+
+      const today = new Date().toISOString().split("T")[0];
+      saveAs(response.data, `${reportKey}_${today}_Secure.zip`);
+      return;
+    }
+
+    // ORIGINAL LOCAL LOGIC for smaller ranges
     if (!data || data.length === 0) {
       alert("No data available to export.");
       return;
@@ -93,65 +113,22 @@ const handleExport = async () => {
     }
 
     /* =========================
-       50K–200K → MULTI-SHEET XLSX
+       > 50K → FALLBACK TO BACKEND ZIP
     ========================= */
-    if (totalRows <= 200000) {
-      const wb = XLSX.utils.book_new();
-      const CHUNK = 50000;
+    alert(`Dataset too large for browser Excel (${totalRows} rows). Switching to backend secure download...`);
+    
+    const response = await api.post('/report/export-zip', {
+      reportType: reportKey,
+      fromDate,
+      toDate,
+      username: 'admin'
+    }, { responseType: 'blob' });
 
-      for (let i = 0; i < totalRows; i += CHUNK) {
-        const ws = XLSX.utils.json_to_sheet(data.slice(i, i + CHUNK));
-        XLSX.utils.book_append_sheet(wb, ws, `Sheet_${i / CHUNK + 1}`);
-      }
-
-      const buffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-      saveAs(new Blob([buffer]), `${reportKey}_${today}.xlsx`);
-      return;
-    }
-
-    /* =========================
-       200K–500K → CSV ZIP ✅
-    ========================= */
-    if (totalRows <= 800000) {
-      const zip = new JSZip();
-      const headers = Object.keys(data[0]);
-      const ROWS_PER_FILE = 100000;
-
-      const escape = (v) =>
-        `"${String(v ?? "").replace(/"/g, '""')}"`;
-
-      for (let i = 0; i < totalRows; i += ROWS_PER_FILE) {
-        let csv = headers.join(",") + "\n";
-        const chunk = data.slice(i, i + ROWS_PER_FILE);
-
-        for (let row of chunk) {
-          csv += headers.map(h => escape(row[h])).join(",") + "\n";
-        }
-
-        zip.file(
-          `${reportKey}_part_${i / ROWS_PER_FILE + 1}.csv`,
-          csv
-        );
-
-        // Prevent browser freeze
-        await new Promise(res => setTimeout(res, 0));
-      }
-
-      const zipBlob = await zip.generateAsync({ type: "blob" });
-      saveAs(zipBlob, `${reportKey}_${today}_CSV.zip`);
-      return;
-    }
-
-    /* =========================
-       > 500K → BLOCK
-    ========================= */
-    alert(
-      `Total Records: ${totalRows}. Please use backend export.`
-    );
+    saveAs(response.data, `${reportKey}_${today}_Large.zip`);
 
   } catch (err) {
     console.error(err);
-    alert(`Failed to export report data. Total Records: ${data.length}`);
+    alert(`Failed to export report data.`);
   } finally {
     setLoading(false);
   }
