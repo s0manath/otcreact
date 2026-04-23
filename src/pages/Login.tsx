@@ -1,18 +1,34 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Lock, User, LifeBuoy, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Lock, User, LifeBuoy, ArrowRight, ShieldCheck, AlertCircle } from 'lucide-react';
+import authService from '../services/authService';
+import { useNavigate } from 'react-router-dom';
 
 const Login: React.FC = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const [error, setError] = useState('');
+    const navigate = useNavigate();
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
-        setTimeout(() => {
-            window.location.href = '/dashboard';
-        }, 800);
+        setError('');
+        
+        try {
+            const response = await authService.login(username, password);
+            if (response.success) {
+                navigate('/dashboard');
+            } else {
+                setError(response.message);
+                setIsLoading(false);
+            }
+        } catch (err: any) {
+            setError(err.response?.data?.message || 'Login failed. Please check your connection.');
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -77,6 +93,17 @@ const Login: React.FC = () => {
                         <h1 className="text-3xl font-black text-slate-900 tracking-tight mb-2">Login</h1>
                         <p className="text-slate-500 font-medium">Please enter your credentials to access the portal.</p>
                     </div>
+
+                    {error && (
+                        <motion.div 
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="mb-6 p-4 bg-rose-50 border border-rose-100 rounded-2xl flex items-start gap-3"
+                        >
+                            <AlertCircle className="text-rose-500 w-5 h-5 mt-0.5" />
+                            <p className="text-sm font-bold text-rose-600 leading-tight">{error}</p>
+                        </motion.div>
+                    )}
 
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="space-y-2">

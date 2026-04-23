@@ -11,6 +11,18 @@ import { motion } from 'framer-motion';
 import { useNavigate, useParams } from 'react-router-dom';
 import masterService, { type RoleMaster, type ModuleAccess } from '../services/masterService';
 
+const REPORT_LIST = [
+    "Scheduled Details Report",
+    "Route Configure Details Report",
+    "OTC Checkout Report",
+    "OTC Activity Details Report",
+    "OTC Dashboard Report",
+    "ATM Details Report",
+    "Bulk Attachment Download Report",
+    "Custodian wise pending VS Completed",
+    "Audit Report"
+];
+
 const RoleMasterForm: React.FC = () => {
     const navigate = useNavigate();
     const { id } = useParams<{ id: string }>();
@@ -21,9 +33,12 @@ const RoleMasterForm: React.FC = () => {
         roleName: '',
         roleDescription: '',
         roleStatus: 1,
+        coustodianNoneAvailable: 0,
         privileges: [],
         reportPrivileges: []
     });
+
+    const [activeTab, setActiveTab] = useState<'modules' | 'reports'>('modules');
 
     const [loading, setLoading] = useState(false);
     const [saveLoading, setSaveLoading] = useState(false);
@@ -50,7 +65,11 @@ const RoleMasterForm: React.FC = () => {
                     view: false,
                     delete: false
                 }));
-                setForm(prev => ({ ...prev, privileges: initialPrivileges }));
+                const initialReports = REPORT_LIST.map(r => ({
+                    reportName: r,
+                    view: false
+                }));
+                setForm(prev => ({ ...prev, privileges: initialPrivileges, reportPrivileges: initialReports }));
             }
         } catch (error) {
             console.error('Error loading role data:', error);
@@ -68,6 +87,18 @@ const RoleMasterForm: React.FC = () => {
                 return p;
             });
             return { ...prev, privileges: updatedPrivileges };
+        });
+    };
+
+    const handleReportToggle = (reportName: string) => {
+        setForm(prev => {
+            const updatedReports = prev.reportPrivileges.map(r => {
+                if (r.reportName === reportName) {
+                    return { ...r, view: !r.view };
+                }
+                return r;
+            });
+            return { ...prev, reportPrivileges: updatedReports };
         });
     };
 
@@ -182,6 +213,26 @@ const RoleMasterForm: React.FC = () => {
                                         </button>
                                     </div>
                                 </div>
+
+                                <div className="space-y-2 pt-4 border-t border-slate-100">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1 mb-3 block">Custodian Not Available Route</label>
+                                    <div className="flex bg-slate-100 p-1.5 rounded-2xl">
+                                        <button
+                                            type="button"
+                                            onClick={() => setForm({ ...form, coustodianNoneAvailable: 1 })}
+                                            className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${form.coustodianNoneAvailable === 1 ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-400 hover:text-slate-600'}`}
+                                        >
+                                            Active
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setForm({ ...form, coustodianNoneAvailable: 0 })}
+                                            className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${form.coustodianNoneAvailable === 0 ? 'bg-white shadow-sm text-rose-600' : 'text-slate-400 hover:text-slate-600'}`}
+                                        >
+                                            Inactive
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </motion.div>
 
@@ -222,45 +273,91 @@ const RoleMasterForm: React.FC = () => {
                                         type="text"
                                         value={matrixSearch}
                                         onChange={e => setMatrixSearch(e.target.value)}
-                                        placeholder="Filter Modules..."
+                                        placeholder={`Filter ${activeTab === 'modules' ? 'Modules' : 'Reports'}...`}
                                         className="w-full bg-slate-50 border border-slate-200 rounded-full py-2.5 pl-10 pr-4 text-[10px] font-black uppercase tracking-widest text-slate-800 focus:outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-500/5"
                                     />
                                 </div>
                             </div>
 
+                            <div className="flex border-b border-slate-100 px-8">
+                                <button
+                                    type="button"
+                                    onClick={() => setActiveTab('modules')}
+                                    className={`py-4 px-6 text-[10px] font-black uppercase tracking-widest border-b-2 transition-all ${activeTab === 'modules' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
+                                >
+                                    Module Access
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setActiveTab('reports')}
+                                    className={`py-4 px-6 text-[10px] font-black uppercase tracking-widest border-b-2 transition-all ${activeTab === 'reports' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
+                                >
+                                    Report Access
+                                </button>
+                            </div>
+
                             <div className="flex-1 overflow-y-auto px-8 py-4 custom-scrollbar">
-                                <table className="w-full border-separate border-spacing-y-3">
-                                    <thead className="sticky top-0 bg-white z-20">
-                                        <tr>
-                                            <th className="text-left py-4 px-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Target Module</th>
-                                            <th className="text-center py-4 px-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">Execute (Add)</th>
-                                            <th className="text-center py-4 px-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">Modify (Edit)</th>
-                                            <th className="text-center py-4 px-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">Observe (View)</th>
-                                            <th className="text-center py-4 px-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">Purge (Delete)</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {form.privileges
-                                            .filter(p => p.moduleName.toLowerCase().includes(matrixSearch.toLowerCase()))
-                                            .map((p, idx) => (
-                                                <motion.tr
-                                                    key={p.moduleName}
-                                                    initial={{ opacity: 0, x: 20 }}
-                                                    animate={{ opacity: 1, x: 0 }}
-                                                    transition={{ delay: idx * 0.03 }}
-                                                    className="group"
-                                                >
-                                                    <td className="py-4 px-4 bg-slate-50/50 rounded-l-2xl border-l border-y border-slate-100 group-hover:bg-indigo-50/30 transition-colors">
-                                                        <span className="text-xs font-black text-slate-800 uppercase tracking-tight">{p.moduleName}</span>
-                                                    </td>
-                                                    <PermissionToggle checked={p.add} onChange={() => handleToggle(p.moduleName, 'add')} />
-                                                    <PermissionToggle checked={p.edit} onChange={() => handleToggle(p.moduleName, 'edit')} />
-                                                    <PermissionToggle checked={p.view} onChange={() => handleToggle(p.moduleName, 'view')} />
-                                                    <PermissionToggle checked={p.delete} onChange={() => handleToggle(p.moduleName, 'delete')} isDelete />
-                                                </motion.tr>
-                                            ))}
-                                    </tbody>
-                                </table>
+                                {activeTab === 'modules' ? (
+                                    <table className="w-full border-separate border-spacing-y-3">
+                                        <thead className="sticky top-0 bg-white z-20">
+                                            <tr>
+                                                <th className="text-left py-4 px-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Target Module</th>
+                                                <th className="text-center py-4 px-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">Execute (Add)</th>
+                                                <th className="text-center py-4 px-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">Modify (Edit)</th>
+                                                <th className="text-center py-4 px-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">Observe (View)</th>
+                                                <th className="text-center py-4 px-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">Purge (Delete)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {form.privileges
+                                                .filter(p => p.moduleName.toLowerCase().includes(matrixSearch.toLowerCase()))
+                                                .map((p, idx) => (
+                                                    <motion.tr
+                                                        key={p.moduleName}
+                                                        initial={{ opacity: 0, x: 20 }}
+                                                        animate={{ opacity: 1, x: 0 }}
+                                                        transition={{ delay: idx * 0.03 }}
+                                                        className="group"
+                                                    >
+                                                        <td className="py-4 px-4 bg-slate-50/50 rounded-l-2xl border-l border-y border-slate-100 group-hover:bg-indigo-50/30 transition-colors">
+                                                            <span className="text-xs font-black text-slate-800 uppercase tracking-tight">{p.moduleName}</span>
+                                                        </td>
+                                                        <PermissionToggle checked={p.add} onChange={() => handleToggle(p.moduleName, 'add')} />
+                                                        <PermissionToggle checked={p.edit} onChange={() => handleToggle(p.moduleName, 'edit')} />
+                                                        <PermissionToggle checked={p.view} onChange={() => handleToggle(p.moduleName, 'view')} />
+                                                        <PermissionToggle checked={p.delete} onChange={() => handleToggle(p.moduleName, 'delete')} isDelete />
+                                                    </motion.tr>
+                                                ))}
+                                        </tbody>
+                                    </table>
+                                ) : (
+                                    <table className="w-full border-separate border-spacing-y-3">
+                                        <thead className="sticky top-0 bg-white z-20">
+                                            <tr>
+                                                <th className="text-left py-4 px-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Target Report</th>
+                                                <th className="text-center py-4 px-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">Observe (View)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {form.reportPrivileges
+                                                .filter(r => r.reportName.toLowerCase().includes(matrixSearch.toLowerCase()))
+                                                .map((r, idx) => (
+                                                    <motion.tr
+                                                        key={r.reportName}
+                                                        initial={{ opacity: 0, x: 20 }}
+                                                        animate={{ opacity: 1, x: 0 }}
+                                                        transition={{ delay: idx * 0.03 }}
+                                                        className="group"
+                                                    >
+                                                        <td className="py-4 px-4 bg-slate-50/50 rounded-l-2xl border-l border-y border-slate-100 group-hover:bg-indigo-50/30 transition-colors">
+                                                            <span className="text-xs font-black text-slate-800 uppercase tracking-tight">{r.reportName}</span>
+                                                        </td>
+                                                        <PermissionToggle checked={r.view} onChange={() => handleReportToggle(r.reportName)} isDelete={false} isRight />
+                                                    </motion.tr>
+                                                ))}
+                                        </tbody>
+                                    </table>
+                                )}
                             </div>
 
                             <div className="p-6 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
@@ -277,8 +374,8 @@ const RoleMasterForm: React.FC = () => {
     );
 };
 
-const PermissionToggle: React.FC<{ checked: boolean; onChange: () => void; isDelete?: boolean }> = ({ checked, onChange, isDelete }) => (
-    <td className={`py-4 px-2 text-center bg-slate-50/50 border-y border-slate-100 group-hover:bg-indigo-50/30 transition-colors ${isDelete ? 'rounded-r-2xl border-r' : ''}`}>
+const PermissionToggle: React.FC<{ checked: boolean; onChange: () => void; isDelete?: boolean; isRight?: boolean }> = ({ checked, onChange, isDelete, isRight }) => (
+    <td className={`py-4 px-2 text-center bg-slate-50/50 border-y border-slate-100 group-hover:bg-indigo-50/30 transition-colors ${isDelete || isRight ? 'rounded-r-2xl border-r' : ''}`}>
         <button
             type="button"
             onClick={onChange}

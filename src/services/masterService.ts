@@ -88,10 +88,11 @@ export interface RoleMaster {
   roleName: string;
   roleDescription: string;
   roleStatus?: number;
+  coustodianNoneAvailable?: number;
   privileges: ModuleAccess[];
   reportPrivileges: ReportAccess[];
   createdOn?: string;
-  createdBy?: string;
+  createdBy?: number;
 }
 
 export interface StateMaster {
@@ -233,6 +234,13 @@ const masterService = {
     { id: "RK001|CID101|TK_ABC", name: "RK-SOUTH-01" },
     { id: "RK002|CID102|TK_XYZ", name: "RK-NORTH-02" },
   ],
+
+  // Stubs for build
+  getFranchises: async (params?: any) => [],
+  getZom: async (id: number) => ({} as ZomMaster),
+  saveZom: async (data: ZomMaster) => ({}),
+  getZomsList: async (params?: any) => [],
+  updateRouteKeyBulk: async (data: any) => ({})
 };
 
 export default masterService;
