@@ -12,14 +12,8 @@ import {
     Map,
     Search
 } from 'lucide-react';
-import axios from 'axios';
+import { loginMasterService, type HierarchyItem } from '../services/loginMasterService';
 import { motion, AnimatePresence } from 'framer-motion';
-
-interface HierarchyItem {
-    id: string;
-    name: string;
-    parentId?: string;
-}
 
 const LoginMasterForm: React.FC = () => {
     const navigate = useNavigate();
@@ -60,8 +54,8 @@ const LoginMasterForm: React.FC = () => {
 
     const fetchInitialData = async () => {
         try {
-            const regions = await axios.get('http://localhost:5000/api/LoginMaster/hierarchy/region');
-            setHierarchy(prev => ({ ...prev, regions: regions.data }));
+            const data = await loginMasterService.getHierarchy('region');
+            setHierarchy(prev => ({ ...prev, regions: data }));
         } catch (error) {
             console.error('Error fetching initial hierarchy:', error);
         }
@@ -69,8 +63,8 @@ const LoginMasterForm: React.FC = () => {
 
     const fetchUserDetails = async () => {
         try {
-            const response = await axios.get(`http://localhost:5000/api/LoginMaster/${username}`);
-            setFormData(prev => ({ ...prev, ...response.data, confirmPassword: response.data.password }));
+            const data = await loginMasterService.getLoginById(username!);
+            setFormData(prev => ({ ...prev, ...data, confirmPassword: data?.password || '' }));
         } catch (error) {
             console.error('Error fetching user details:', error);
         }
@@ -86,8 +80,8 @@ const LoginMasterForm: React.FC = () => {
             newFormData.selectedFranchises = [];
 
             if (selectedIds.length > 0) {
-                const states = await axios.get(`http://localhost:5000/api/LoginMaster/hierarchy/state?parentId=${selectedIds.join(',')}`);
-                setHierarchy(prev => ({ ...prev, states: states.data, districts: [], franchises: [] }));
+                const data = await loginMasterService.getHierarchy('state', selectedIds.join(','));
+                setHierarchy(prev => ({ ...prev, states: data, districts: [], franchises: [] }));
             } else {
                 setHierarchy(prev => ({ ...prev, states: [], districts: [], franchises: [] }));
             }
@@ -97,8 +91,8 @@ const LoginMasterForm: React.FC = () => {
             newFormData.selectedFranchises = [];
 
             if (selectedIds.length > 0) {
-                const districts = await axios.get(`http://localhost:5000/api/LoginMaster/hierarchy/district?parentId=${selectedIds.join(',')}`);
-                setHierarchy(prev => ({ ...prev, districts: districts.data, franchises: [] }));
+                const data = await loginMasterService.getHierarchy('district', selectedIds.join(','));
+                setHierarchy(prev => ({ ...prev, districts: data, franchises: [] }));
             } else {
                 setHierarchy(prev => ({ ...prev, districts: [], franchises: [] }));
             }
@@ -107,8 +101,8 @@ const LoginMasterForm: React.FC = () => {
             newFormData.selectedFranchises = [];
 
             if (selectedIds.length > 0) {
-                const franchises = await axios.get(`http://localhost:5000/api/LoginMaster/hierarchy/franchise?parentId=${selectedIds.join(',')}`);
-                setHierarchy(prev => ({ ...prev, franchises: franchises.data }));
+                const data = await loginMasterService.getHierarchy('franchise', selectedIds.join(','));
+                setHierarchy(prev => ({ ...prev, franchises: data }));
             } else {
                 setHierarchy(prev => ({ ...prev, franchises: [] }));
             }
@@ -156,7 +150,7 @@ const LoginMasterForm: React.FC = () => {
 
         setLoading(true);
         try {
-            await axios.post('http://localhost:5000/api/LoginMaster/save', formData);
+            await loginMasterService.saveLogin(formData);
             setMessage({ type: 'success', text: `User ${isEdit ? 'updated' : 'created'} successfully!` });
             setTimeout(() => navigate('/login-master'), 2000);
         } catch (error) {

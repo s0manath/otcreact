@@ -11,7 +11,7 @@ import {
     Shield,
     Lock
 } from 'lucide-react';
-import axios from 'axios';
+import { loginMasterService } from '../services/loginMasterService';
 import { motion } from 'framer-motion';
 
 const LoginMasterList: React.FC = () => {
@@ -19,12 +19,14 @@ const LoginMasterList: React.FC = () => {
     const [logins, setLogins] = useState<any[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [loading, setLoading] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
 
     const fetchLogins = async () => {
         setLoading(true);
         try {
-            const response = await axios.post('http://localhost:5000/api/LoginMaster/search', { searchTerm });
-            setLogins(response.data);
+            const data = await loginMasterService.searchLogins(searchTerm);
+            setLogins(data);
         } catch (error) {
             console.error('Error fetching logins:', error);
         } finally {
@@ -38,8 +40,14 @@ const LoginMasterList: React.FC = () => {
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
+        setCurrentPage(1);
         fetchLogins();
     };
+
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentLogins = logins.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = Math.ceil(logins.length / itemsPerPage);
 
     return (
         <div className="p-8 lg:p-12 bg-slate-50/30 min-h-screen selection:bg-primary-500/20">
@@ -132,7 +140,7 @@ const LoginMasterList: React.FC = () => {
                                         </td>
                                     </tr>
                                 ) : (
-                                    logins.map((login, idx) => (
+                                    currentLogins.map((login, idx) => (
                                         <motion.tr
                                             initial={{ opacity: 0, y: 10 }}
                                             animate={{ opacity: 1, y: 0 }}
@@ -197,11 +205,21 @@ const LoginMasterList: React.FC = () => {
                     </div>
 
                     <div className="p-6 border-t border-slate-50 flex items-center justify-between text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
-                        <span>Analysis of {logins.length} Secure Profiles</span>
+                        <span>Showing {logins.length > 0 ? indexOfFirstItem + 1 : 0} to {Math.min(indexOfLastItem, logins.length)} of {logins.length} Profiles</span>
                         <div className="flex items-center gap-2">
-                            <button className="px-4 py-2 bg-slate-50 rounded-xl border border-slate-200 opacity-50 cursor-not-allowed transition-all">Previous</button>
-                            <button className="px-5 py-2 bg-primary-600 text-white rounded-xl shadow-lg shadow-primary-500/30">1</button>
-                            <button className="px-4 py-2 bg-white text-slate-600 rounded-xl border border-slate-200 hover:bg-slate-50 transition-all">Next</button>
+                            <button 
+                                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                disabled={currentPage === 1}
+                                className={`px-4 py-2 rounded-xl border border-slate-200 transition-all ${currentPage === 1 ? 'bg-slate-50 opacity-50 cursor-not-allowed' : 'bg-white text-slate-600 hover:bg-slate-50'}`}>
+                                Previous
+                            </button>
+                            <span className="px-4 py-2 font-bold text-slate-600">Page {currentPage} of {totalPages || 1}</span>
+                            <button 
+                                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                disabled={currentPage === totalPages || totalPages === 0}
+                                className={`px-4 py-2 rounded-xl border border-slate-200 transition-all ${currentPage === totalPages || totalPages === 0 ? 'bg-slate-50 opacity-50 cursor-not-allowed' : 'bg-white text-slate-600 hover:bg-slate-50'}`}>
+                                Next
+                            </button>
                         </div>
                     </div>
                 </div>
