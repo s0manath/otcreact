@@ -9,7 +9,8 @@ import {
     X,
     CheckCircle2,
     Globe,
-    Map
+    Map,
+    Search
 } from 'lucide-react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -48,6 +49,7 @@ const LoginMasterForm: React.FC = () => {
 
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
+    const [scopeSearch, setScopeSearch] = useState('');
 
     useEffect(() => {
         fetchInitialData();
@@ -164,7 +166,10 @@ const LoginMasterForm: React.FC = () => {
         }
     };
 
-    const ListBox = ({ title, type, items, selected, fullWidth = false }: { title: string, type: string, items: HierarchyItem[], selected: string[], fullWidth?: boolean }) => (
+    const ListBox = ({ title, type, items, selected, fullWidth = false }: { title: string, type: string, items: HierarchyItem[], selected: string[], fullWidth?: boolean }) => {
+        const filteredItems = items.filter(item => item.name.toLowerCase().includes(scopeSearch.toLowerCase()));
+        
+        return (
         <div className={`flex flex-col h-full ${fullWidth ? 'col-span-full' : ''}`}>
             <div className="flex items-center justify-between mb-4 px-3">
                 <div className="flex items-center gap-2">
@@ -178,7 +183,7 @@ const LoginMasterForm: React.FC = () => {
             </div>
             <div className={`flex-1 bg-white/50 border border-slate-200 rounded-[2rem] overflow-hidden flex flex-col shadow-sm group focus-within:ring-8 focus-within:ring-primary-500/5 focus-within:border-primary-400/50 transition-all ${fullWidth ? 'min-h-[220px]' : 'min-h-[280px]'}`}>
                 <div className="overflow-y-auto custom-scrollbar p-4 space-y-2">
-                    {items.length === 0 ? (
+                    {filteredItems.length === 0 ? (
                         <div className="h-full flex flex-col items-center justify-center py-12 text-center">
                             <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-200 mb-3">
                                 <Map size={24} />
@@ -189,7 +194,7 @@ const LoginMasterForm: React.FC = () => {
                         </div>
                     ) : (
                         <div className={`grid ${fullWidth ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3' : 'grid-cols-1 gap-2'}`}>
-                            {items.map(item => (
+                            {filteredItems.map(item => (
                                 <button
                                     key={item.id}
                                     type="button"
@@ -213,6 +218,7 @@ const LoginMasterForm: React.FC = () => {
             </div>
         </div>
     );
+    };
 
     return (
         <div className="min-h-screen bg-[#f1f5f9] p-8 lg:p-12 font-sans selection:bg-primary-500/30">
@@ -411,6 +417,18 @@ const LoginMasterForm: React.FC = () => {
                                         <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Territorial Clearance</h3>
                                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Step 02 / Access Scope</p>
                                     </div>
+                                </div>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-300">
+                                        <Search size={16} />
+                                    </div>
+                                    <input
+                                        type="text"
+                                        value={scopeSearch}
+                                        onChange={(e) => setScopeSearch(e.target.value)}
+                                        className="bg-white/50 border border-slate-200 rounded-2xl py-2 pl-10 pr-4 text-sm font-bold text-slate-800 focus:outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-400 transition-all placeholder:text-slate-300"
+                                        placeholder="Search access scope..."
+                                    />
                                 </div>
                             </div>
 

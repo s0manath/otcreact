@@ -17,17 +17,13 @@ import { motion } from 'framer-motion';
 const LoginMasterList: React.FC = () => {
     const navigate = useNavigate();
     const [logins, setLogins] = useState<any[]>([]);
-    const [searchParams, setSearchParams] = useState({
-        field: 'None',
-        startWith: '',
-        lockedUser: false
-    });
+    const [searchTerm, setSearchTerm] = useState('');
     const [loading, setLoading] = useState(false);
 
     const fetchLogins = async () => {
         setLoading(true);
         try {
-            const response = await axios.post('http://localhost:5000/api/LoginMaster/search', searchParams);
+            const response = await axios.post('http://localhost:5000/api/LoginMaster/search', { searchTerm });
             setLogins(response.data);
         } catch (error) {
             console.error('Error fetching logins:', error);
@@ -88,51 +84,23 @@ const LoginMasterList: React.FC = () => {
 
                 {/* Search Panel */}
                 <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 mb-8 bg-gradient-to-br from-white to-slate-50/50">
-                    <form onSubmit={handleSearch} className="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
-                        <div>
-                            <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-1">Search Field</label>
-                            <select
-                                value={searchParams.field}
-                                onChange={(e) => setSearchParams({ ...searchParams, field: e.target.value })}
-                                className="w-full bg-white border border-slate-200 rounded-xl py-2.5 px-4 text-xs font-semibold focus:outline-none focus:ring-4 focus:ring-primary-500/5 focus:border-primary-400 transition-all appearance-none"
-                            >
-                                <option value="None">None</option>
-                                <option value="Uname">User Name</option>
-                                <option value="Utype">User Type</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-1">Starts With</label>
-                            <div className="relative">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
-                                <input
-                                    type="text"
-                                    value={searchParams.startWith}
-                                    onChange={(e) => setSearchParams({ ...searchParams, startWith: e.target.value })}
-                                    placeholder="Search value..."
-                                    className="w-full bg-white border border-slate-200 rounded-xl py-2.5 pl-10 pr-4 text-xs font-semibold focus:outline-none focus:ring-4 focus:ring-primary-500/5 focus:border-primary-400 transition-all"
-                                />
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-3 mb-3 ml-2">
+                    <form onSubmit={handleSearch} className="flex gap-4 items-center">
+                        <div className="relative flex-1">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                             <input
-                                type="checkbox"
-                                id="locked"
-                                checked={searchParams.lockedUser}
-                                onChange={(e) => setSearchParams({ ...searchParams, lockedUser: e.target.checked })}
-                                className="w-4 h-4 text-primary-600 border-slate-200 rounded focus:ring-primary-500"
+                                type="text"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                placeholder="Search by username, role, or user type..."
+                                className="w-full bg-white border border-slate-200 rounded-2xl py-3.5 pl-12 pr-4 text-sm font-semibold focus:outline-none focus:ring-4 focus:ring-primary-500/5 focus:border-primary-400 transition-all placeholder:text-slate-400"
                             />
-                            <label htmlFor="locked" className="text-xs font-bold text-slate-600 cursor-pointer flex items-center gap-2">
-                                <Lock size={12} className="text-slate-400" />
-                                Locked Users Only
-                            </label>
                         </div>
                         <button
                             type="submit"
-                            className="bg-slate-900 border border-slate-900 text-white px-6 py-2.5 rounded-xl text-xs font-black hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/10 flex items-center justify-center gap-2"
+                            className="bg-slate-900 border border-slate-900 text-white px-8 py-3.5 rounded-2xl text-sm font-black hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/10 flex items-center justify-center gap-3 shrink-0"
                         >
-                            <Filter size={14} />
-                            Apply Search
+                            <Search size={18} />
+                            Search
                         </button>
                     </form>
                 </div>
