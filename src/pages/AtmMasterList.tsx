@@ -1,16 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from "react";
-import {
-  Monitor,
-  Building,
-  MapPin,
-  Activity,
-  Server,
-  Database,
-  Calendar,
-  Upload,
-  Key,
-} from "lucide-react";
+import { Monitor, Server, Upload, Key } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import MasterPage from "../components/MasterPage";
 import masterService, { type AtmMaster } from "../services/masterService";

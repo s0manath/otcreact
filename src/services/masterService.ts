@@ -142,7 +142,7 @@ export interface MasterDropdownItem {
 const masterService = {
   // Roles
   getRoles: async () => {
-    const response = await api.get<RoleMaster[]>("/rolemaster");
+    const response = await api.get<RoleMaster[]>("/rolemaster/list");
     return response.data;
   },
   getRole: async (id: number) => {
@@ -235,12 +235,32 @@ const masterService = {
     { id: "RK002|CID102|TK_XYZ", name: "RK-NORTH-02" },
   ],
 
+  uploadAtmBulk: async (_fileName: string, _base64: string) => {
+    return {};
+  },
+
+  getCustodian: async (_id: number) => {
+    return {};
+  },
+
+  saveCustodian: async (_data: any) => {
+    return {};
+  },
+
+  getCustodians: async (_params: any) => {
+    return [];
+  },
+
+  saveFranchise: async (_data: any) => {
+    return {};
+  },
+
   // Stubs for build
-  getFranchises: async (params?: any) => [],
-  getZom: async (id: number) => ({} as ZomMaster),
-  saveZom: async (data: ZomMaster) => ({}),
-  getZomsList: async (params?: any) => [],
-  updateRouteKeyBulk: async (data: any) => ({})
+  getFranchises: async (_params?: any) => [],
+  getZom: async (_id: number) => ({}) as ZomMaster,
+  saveZom: async (_data: ZomMaster) => ({}),
+  getZomsList: async (_params?: any) => [],
+  updateRouteKeyBulk: async (_data: any) => ({}),
 };
 
 export default masterService;
