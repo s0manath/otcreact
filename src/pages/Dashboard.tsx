@@ -3,16 +3,12 @@ import React, { useState, useEffect } from "react";
 
 import {
   Calendar as CalendarIcon,
-  Monitor,
   CheckCircle2,
   RefreshCw,
   Clock,
-  Route,
   TrendingUp,
   Search,
   MapPin,
-  ArrowUpRight,
-  ArrowDownRight,
   Loader2,
   ChevronLeft,
   ChevronRight,
@@ -452,7 +448,7 @@ const Dashboard: React.FC = () => {
                 {/* Legend */}
                 <Legend
                   verticalAlign="bottom"
-                  formatter={(value: any, entry: any) => (
+                  formatter={(_value: any, entry: any) => (
                     <span className="text-xs font-semibold text-slate-600">
                       {entry.payload.Name}
                     </span>
