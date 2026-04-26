@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:5218/api", // Correct port from launchSettings.json
+  baseURL: "http://localhost:5218/LMSOTCWEBAPP/api", // Correct port from launchSettings.json
   // baseURL: "https://192.168.70.12:8667/LMSOTCWEBAPP/api",
   headers: {
     "Content-Type": "application/json",

@@ -19,7 +19,7 @@ export const loginMasterService = {
         return response.data;
     },
     getLoginById: async (username: string) => {
-        const response = await api.get(`/LoginMaster/${username}`);
+        const response = await api.post('/LoginMaster/detail', { id: username });
         return response.data;
     },
     saveLogin: async (data: any) => {
@@ -35,8 +35,7 @@ export const loginMasterService = {
         return response.data;
     },
     getHierarchy: async (type: string, parentId?: string) => {
-        const url = `/LoginMaster/hierarchy/${type}${parentId ? `?parentId=${parentId}` : ''}`;
-        const response = await api.get<HierarchyItem[]>(url);
+        const response = await api.post<HierarchyItem[]>('/LoginMaster/hierarchy', { type, parentId: parentId || '' });
         return response.data;
     }
 };

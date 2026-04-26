@@ -62,11 +62,51 @@ const LoginMasterForm: React.FC = () => {
     };
 
     const fetchUserDetails = async () => {
+        setLoading(true);
         try {
             const data = await loginMasterService.getLoginById(username!);
-            setFormData(prev => ({ ...prev, ...data, confirmPassword: data?.password || '' }));
+            if (data) {
+                // Map PascalCase from API to camelCase for form if needed, though default should be camelCase
+                const normalizedData = {
+                    username: data.username || data.Username || '',
+                    fullName: data.fullName || data.FullName || '',
+                    email: data.email || data.Email || '',
+                    password: data.password || data.Password || '',
+                    userType: data.userType || data.UserType || 'User',
+                    role: data.role || data.Role || 'Standard',
+                    selectedRegions: data.selectedRegions || data.SelectedRegions || [],
+                    selectedStates: data.selectedStates || data.SelectedStates || [],
+                    selectedDistricts: data.selectedDistricts || data.SelectedDistricts || [],
+                    selectedFranchises: data.selectedFranchises || data.SelectedFranchises || []
+                };
+
+                setFormData(prev => ({ 
+                    ...prev, 
+                    ...normalizedData, 
+                    confirmPassword: normalizedData.password 
+                }));
+
+                // Sequential hierarchy loading for access parity
+                if (normalizedData.selectedRegions.length > 0) {
+                    const states = await loginMasterService.getHierarchy('state', normalizedData.selectedRegions.join(','));
+                    setHierarchy(prev => ({ ...prev, states }));
+                    
+                    if (normalizedData.selectedStates.length > 0) {
+                        const districts = await loginMasterService.getHierarchy('district', normalizedData.selectedStates.join(','));
+                        setHierarchy(prev => ({ ...prev, districts }));
+                        
+                        if (normalizedData.selectedDistricts.length > 0) {
+                            const franchises = await loginMasterService.getHierarchy('franchise', normalizedData.selectedDistricts.join(','));
+                            setHierarchy(prev => ({ ...prev, franchises }));
+                        }
+                    }
+                }
+            }
         } catch (error) {
             console.error('Error fetching user details:', error);
+            setMessage({ type: 'error', text: 'Failed to load user details.' });
+        } finally {
+            setLoading(false);
         }
     };
 
